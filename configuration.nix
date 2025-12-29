@@ -223,6 +223,7 @@ in
         # Ajustar permisos
         chown -R aso:users "$HOME_DIR"
 
+
         # Limpiar backup temporal
         rm -rf /tmp/aso-backup
       fi
