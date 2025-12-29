@@ -328,9 +328,8 @@ in
           widgets = [
             {
               kickoff = {
-                icon = "nix-d-white";
+                icon = "nix-snowflake-white";
                 sortAlphabetically = true;
-                favoritesPortedToKAstats = true;
               };
             }
             {
