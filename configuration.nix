@@ -257,7 +257,7 @@ in
   systemd.services.download-wallpaper-on-boot = {
     description = "Descargar wallpaper al boot si no existe";
     wantedBy = [ "multi-user.target" ];
-    after = [ "clean-home-on-boot" ];
+    after = [ "clean-home-on-boot.service" ];
     serviceConfig = {
       Type = "oneshot";
       ExecStart = "${pkgs.bash}/bin/bash -c 'if [ ! -f /var/lib/aedm/wallpaper.jpg ]; then ${pkgs.curl}/bin/curl -s --connect-timeout 5 -o /var/lib/aedm/wallpaper.jpg https://raw.githubusercontent.com/aedmadrid/OrdenadorASO/b676d6f4f354c3122c999c087adaf71871c8a134/.bg.jpg && chmod 644 /var/lib/aedm/wallpaper.jpg; fi'";
