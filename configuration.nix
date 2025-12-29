@@ -12,6 +12,18 @@ let
   plasma-manager = builtins.fetchTarball {
     url = "https://github.com/nix-community/plasma-manager/archive/trunk.tar.gz";
   };
+  # Iconos Elementary KDE
+  elementary-kde-icons = pkgs.stdenv.mkDerivation {
+    pname = "elementary-kde-icons";
+    version = "1.0";
+    src = builtins.fetchTarball {
+      url = "https://github.com/zayronxio/Elementary-KDE-Icons/archive/refs/heads/master.tar.gz";
+    };
+    installPhase = ''
+      mkdir -p $out/share/icons
+      cp -r . $out/share/icons/Elementary-KDE
+    '';
+  };
 in
 {
   imports =
@@ -164,9 +176,87 @@ in
     zed-editor
     git
     kdePackages.kate
+    curl
+    elementary-kde-icons
   ] ++ (if stdenv.hostPlatform.system == "x86_64-linux"
         then [ google-chrome ]
         else [ chromium ]);
+
+  # ============================================
+  # SERVICIO: Limpiar home de aso en cada arranque
+  # ============================================
+  systemd.services.clean-aso-home = {
+    description = "Limpiar home de usuario aso manteniendo Documentos y wallpaper";
+    wantedBy = [ "multi-user.target" ];
+    before = [ "display-manager.service" ];
+    serviceConfig = {
+      Type = "oneshot";
+      RemainAfterExit = true;
+    };
+    script = ''
+      HOME_DIR="/home/aso"
+      if [ -d "$HOME_DIR" ]; then
+        # Guardar temporalmente los directorios/archivos que queremos mantener
+        mkdir -p /tmp/aso-backup
+        [ -d "$HOME_DIR/Documentos" ] && cp -a "$HOME_DIR/Documentos" /tmp/aso-backup/
+        [ -d "$HOME_DIR/Documents" ] && cp -a "$HOME_DIR/Documents" /tmp/aso-backup/
+        [ -f "$HOME_DIR/.bg.jpg" ] && cp -a "$HOME_DIR/.bg.jpg" /tmp/aso-backup/
+
+        # Borrar todo en home
+        find "$HOME_DIR" -mindepth 1 -delete
+
+        # Restaurar los directorios/archivos guardados
+        [ -d "/tmp/aso-backup/Documentos" ] && cp -a /tmp/aso-backup/Documentos "$HOME_DIR/"
+        [ -d "/tmp/aso-backup/Documents" ] && cp -a /tmp/aso-backup/Documents "$HOME_DIR/"
+        [ -f "/tmp/aso-backup/.bg.jpg" ] && cp -a /tmp/aso-backup/.bg.jpg "$HOME_DIR/"
+
+        # Crear directorios si no existen
+        mkdir -p "$HOME_DIR/Documentos"
+        mkdir -p "$HOME_DIR/Documents"
+
+        # Ajustar permisos
+        chown -R aso:users "$HOME_DIR"
+
+        # Limpiar backup temporal
+        rm -rf /tmp/aso-backup
+      fi
+    '';
+  };
+
+  # ============================================
+  # SERVICIO: Descargar wallpaper y config antes de apagar + nixos-rebuild
+  # ============================================
+  systemd.services.aedm-update-on-shutdown = {
+    description = "Actualizar configuración, wallpaper y rebuild NixOS antes de apagar";
+    wantedBy = [ "multi-user.target" ];
+    before = [ "shutdown.target" "reboot.target" "halt.target" ];
+    serviceConfig = {
+      Type = "oneshot";
+      RemainAfterExit = true;
+      ExecStop = "${pkgs.bash}/bin/bash -c '${pkgs.curl}/bin/curl -s --connect-timeout 5 -o /home/aso/.bg.jpg https://rawcdn.githack.com/aedmadrid/OrdenadorASO/b676d6f4f354c3122c999c087adaf71871c8a134/.bg.jpg && chown aso:users /home/aso/.bg.jpg; ${pkgs.curl}/bin/curl -s --connect-timeout 5 -o /etc/nixos/configuration.nix https://raw.githack.com/aedmadrid/OrdenadorASO/main/configuration.nix && ${pkgs.nixos-rebuild}/bin/nixos-rebuild switch || true'";
+    };
+    script = "true";
+  };
+
+  # ============================================
+  # REINICIO AUTOMÁTICO DIARIO A LAS 6:00 AM
+  # ============================================
+  systemd.services.daily-reboot = {
+    description = "Reinicio automático diario";
+    serviceConfig = {
+      Type = "oneshot";
+      ExecStart = "${pkgs.systemd}/bin/systemctl reboot";
+    };
+  };
+
+  systemd.timers.daily-reboot = {
+    description = "Timer para reinicio diario a las 6:00 AM";
+    wantedBy = [ "timers.target" ];
+    timerConfig = {
+      OnCalendar = "*-*-* 06:00:00";
+      Persistent = true;
+    };
+  };
 
   # ============================================
   # HOME MANAGER - Configuración del usuario aso
@@ -191,8 +281,10 @@ in
         # Tema
         theme = "breeze";
         colorScheme = "Breeze";
-        # Puedes añadir wallpaper aquí
-        # wallpaper = "/path/to/wallpaper.jpg";
+        # Wallpaper
+        wallpaper = "/home/aso/.bg.jpg";
+        # Iconos Elementary KDE
+        iconTheme = "Elementary-KDE";
       };
 
       # Atajos de teclado personalizados
@@ -206,14 +298,14 @@ in
     # LANZADORES PERSONALIZADOS (.desktop files)
     # ============================================
     xdg.desktopEntries = {
-      # Navegador con --guest (Chrome en x86, Chromium en ARM)
+      # Navegador con --guest abriendo aedm.org.es
       browser-guest = {
         name = "Chrome";
         comment = "Navegar en Internet";
         exec =
           if pkgs.stdenv.hostPlatform.system == "x86_64-linux"
-          then "google-chrome-stable --guest %U"
-          else "chromium --guest %U";
+          then "google-chrome-stable --guest https://aedm.org.es/web"
+          else "chromium --guest https://aedm.org.es/web";
         icon = "google-chrome";
         terminal = false;
         type = "Application";
