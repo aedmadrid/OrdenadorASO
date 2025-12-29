@@ -217,25 +217,28 @@ in
       curl -s --connect-timeout 10 -o "$WALLPAPER_PATH" "$WALLPAPER_URL" || true
 
       if [ -d "$HOME_DIR" ]; then
-        # Guardar temporalmente los directorios/archivos que queremos mantener
-        mkdir -p /tmp/aso-backup
-        [ -d "$HOME_DIR/Documentos" ] && cp -a "$HOME_DIR/Documentos" /tmp/aso-backup/
+        # Crear backup temporal seguro
+        TMP_BACKUP="$(mktemp -d /tmp/aso-backup.XXXXXX)"
 
-        # Borrar todo en home usando rm -rf
-        rm -rf "$HOME_DIR"/* 2>/dev/null || true
-        rm -rf "$HOME_DIR"/.[!.]* 2>/dev/null || true
+        # Preservar "Documentos" si existe
+        if [ -d "$HOME_DIR/Documentos" ]; then
+          cp -a "$HOME_DIR/Documentos" "$TMP_BACKUP/"
+        fi
 
-        # Restaurar los directorios/archivos guardados
-        [ -d "/tmp/aso-backup/Documentos" ] && cp -a /tmp/aso-backup/Documentos "$HOME_DIR/"
+        # Eliminar todo en home excepto los elementos preservados (evita problemas con globs)
+        find "$HOME_DIR" -mindepth 1 -maxdepth 1 ! -name 'Documentos' -exec rm -rf -- {} +
 
-        # Crear directorios si no existen
+        # Asegurar que Documentos exista y restaurarla desde el backup si procede
         mkdir -p "$HOME_DIR/Documentos"
+        if [ -d "$TMP_BACKUP/Documentos" ]; then
+          cp -a "$TMP_BACKUP/Documentos" "$HOME_DIR/"
+        fi
 
-        # Ajustar permisos
-        chown -R aso:users "$HOME_DIR"
+        # Ajustar permisos (no fallar el script si falla chown)
+        chown -R aso:users "$HOME_DIR" || true
 
         # Limpiar backup temporal
-        rm -rf /tmp/aso-backup
+        rm -rf -- "$TMP_BACKUP"
       fi
     '';
   };
