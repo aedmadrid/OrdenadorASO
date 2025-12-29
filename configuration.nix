@@ -163,10 +163,6 @@ in
 
   hardware.bluetooth.enable = true;
 
-  # Desactivar KWallet para evitar popup de llavero
-  security.pam.services.sddm.kwallet.enable = lib.mkForce false;
-  security.pam.services.login.kwallet.enable = lib.mkForce false;
-
   # Excluir aplicaciones de KDE no deseadas
   environment.plasma6.excludePackages = with pkgs.kdePackages; [
     elisa        # Reproductor de música
@@ -198,64 +194,53 @@ in
     description = "Limpiar home de usuario aso manteniendo Documentos y wallpaper";
     wantedBy = [ "multi-user.target" ];
     before = [ "display-manager.service" ];
-    after = [ "network-online.target" ];
-    wants = [ "network-online.target" ];
-    path = [ pkgs.curl pkgs.coreutils pkgs.findutils ];
     serviceConfig = {
       Type = "oneshot";
       RemainAfterExit = true;
     };
     script = ''
-HOME_DIR='/home/aso'
-WALLPAPER_URL='https://raw.githubusercontent.com/aedmadrid/OrdenadorASO/main/.bg.jpg'
-WALLPAPER_PATH='/var/lib/aedm/wallpaper.jpg'
+      HOME_DIR="/home/aso"
+      if [ -d "$HOME_DIR" ]; then
+        # Guardar temporalmente los directorios/archivos que queremos mantener
+        mkdir -p /tmp/aso-backup
+        [ -d "$HOME_DIR/Documentos" ] && cp -a "$HOME_DIR/Documentos" /tmp/aso-backup/
+        [ -f "$HOME_DIR/.bg.jpg" ] && cp -a "$HOME_DIR/.bg.jpg" /tmp/aso-backup/
 
-# Crear directorio para wallpaper del sistema
-mkdir -p /var/lib/aedm
+        # Borrar todo en home
+        find "$HOME_DIR" -mindepth 1 -delete
 
-# Descargar wallpaper si hay internet
-curl -s --connect-timeout 10 -o "$WALLPAPER_PATH" "$WALLPAPER_URL" || true
+        # Restaurar los directorios/archivos guardados
+        [ -d "/tmp/aso-backup/Documentos" ] && cp -a /tmp/aso-backup/Documentos "$HOME_DIR/"
+        [ -f "/tmp/aso-backup/.bg.jpg" ] && cp -a /tmp/aso-backup/.bg.jpg "$HOME_DIR/"
 
-if [ -d "$HOME_DIR" ]; then
-  # Crear backup temporal seguro
-  TMP_BACKUP="$(mktemp -d /tmp/aso-backup.XXXXXX)"
+        # Crear directorios si no existen
+        mkdir -p "$HOME_DIR/Documentos"
 
-  # Preservar "Documentos" si existe
-  if [ -d "$HOME_DIR/Documentos" ]; then
-    cp -a "$HOME_DIR/Documentos" "$TMP_BACKUP/"
-  fi
+        # Copiar el wallpaper del sistema
+        if [ -f "/usr/share/backgrounds/aedm-bg.jpg" ]; then
+          cp -a /usr/share/backgrounds/aedm-bg.jpg "$HOME_DIR/.bg.jpg"
+        fi
 
-  # Eliminar todo en home excepto los elementos preservados (evita problemas con globs)
-  find "$HOME_DIR" -mindepth 1 -maxdepth 1 ! -name 'Documentos' -exec rm -rf -- {} +
+        # Ajustar permisos
+        chown -R aso:users "$HOME_DIR"
 
-  # Asegurar que Documentos exista y restaurarla desde el backup si procede
-  mkdir -p "$HOME_DIR/Documentos"
-  if [ -d "$TMP_BACKUP/Documentos" ]; then
-    cp -a "$TMP_BACKUP/Documentos" "$HOME_DIR/"
-  fi
-
-  # Ajustar permisos (no fallar el script si falla chown)
-  chown -R aso:users "$HOME_DIR" || true
-
-  # Limpiar backup temporal
-  rm -rf -- "$TMP_BACKUP"
-fi
-
-exit 0
-'';
+        # Limpiar backup temporal
+        rm -rf /tmp/aso-backup
+      fi
+    '';
   };
 
   # ============================================
-  # SERVICIO: Descargar config y rebuild NixOS antes de apagar
+  # SERVICIO: Descargar wallpaper y config antes de apagar + nixos-rebuild
   # ============================================
   systemd.services.aedm-update-on-shutdown = {
-    description = "Actualizar configuración y rebuild NixOS antes de apagar";
+    description = "Actualizar configuración, wallpaper y rebuild NixOS antes de apagar";
     wantedBy = [ "multi-user.target" ];
     before = [ "shutdown.target" "reboot.target" "halt.target" ];
     serviceConfig = {
       Type = "oneshot";
       RemainAfterExit = true;
-      ExecStop = "${pkgs.bash}/bin/bash -c '${pkgs.curl}/bin/curl -sL --connect-timeout 5 -o /etc/nixos/configuration.nix https://raw.githubusercontent.com/aedmadrid/OrdenadorASO/main/configuration.nix && ${pkgs.nixos-rebuild}/bin/nixos-rebuild switch || true'";
+      ExecStop = "${pkgs.bash}/bin/bash -c '${pkgs.curl}/bin/curl -s --connect-timeout 5 -o /usr/share/backgrounds/aedm-bg.jpg https://rawcdn.githack.com/aedmadrid/OrdenadorASO/b676d6f4f354c3122c999c087adaf71871c8a134/.bg.jpg && chmod 644 /usr/share/backgrounds/aedm-bg.jpg; ${pkgs.curl}/bin/curl -s --connect-timeout 5 -o /etc/nixos/configuration.nix https://raw.githack.com/aedmadrid/OrdenadorASO/main/configuration.nix && ${pkgs.nixos-rebuild}/bin/nixos-rebuild switch || true'";
     };
     script = "true";
   };
@@ -302,36 +287,17 @@ exit 0
       workspace = {
         # Tema
         theme = "breeze";
-        script = ''
-                  "applications:org.kde.dolphin.desktop"
-                  "applications:browser-guest.desktop"
-                ];
-              };
-            }
-            "org.kde.plasma.marginsseparator"
-            {
-              systemTray = {
-                items = {
-                  shown = [ "org.kde.plasma.volume" "org.kde.plasma.networkmanagement" "org.kde.plasma.battery" ];
-                  hidden = [ "org.kde.plasma.clipboard" ];
-                };
-              };
-            }
-            {
-              digitalClock = {
-                calendar.firstDayOfWeek = "monday";
-                time.format = "24h";
-              };
-            }
-          ];
-        }
-      ];
+        colorScheme = "Breeze";
+        # Wallpaper
+        wallpaper = "/usr/share/backgrounds/aedm-bg.jpg";
+        # Iconos Elementary KDE
+        iconTheme = "Elementary-KDE";
+      };
 
-      # Configurar favoritos del menú de aplicaciones
-      configFile = {
-        "kickoffrc"."Favorites"."favorites" = {
-          value = "preferred://filemanager,applications:browser-guest.desktop";
-        };
+      # Atajos de teclado personalizados
+      shortcuts = {
+        "kwin"."Window Close" = "Alt+F4";
+        "kwin"."Window Fullscreen" = "Meta+F11";
       };
     };
 
