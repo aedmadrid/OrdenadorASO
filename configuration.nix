@@ -20,15 +20,15 @@ let
       url = "https://github.com/zayronxio/Elementary-KDE-Icons.git";
       ref = "master";
     };
-    # Eliminado dontCheckForBrokenSymlinks, no existe en Nix
+    buildInputs = [ pkgs.dos2unix ];
     installPhase = ''
       mkdir -p $out/share/icons/Elementary-KDE
-      # Convertir saltos de línea Windows a Unix usando tr
-      find . -type f -exec sh -c 'tr -d "\r" < "$1" > "$1.tmp" && mv "$1.tmp" "$1"' _ {} \;
+      # Convertir line endings y copiar
+      dos2unix **/*
       cp -rL --no-preserve=mode . $out/share/icons/Elementary-KDE || true
       # Eliminar symlinks rotos
       find $out/share/icons/Elementary-KDE -xtype l -delete || true
-    ''; 
+    '';
   };
 in
 {
@@ -156,6 +156,9 @@ in
     autoLogin.user = "aso";
   };
 
+  # Fondo de pantalla en SDDM (antes de login)
+  services.displayManager.sddm.background = "/var/lib/aedm/wallpaper.jpg";
+
   # Allow unfree packages
   nixpkgs.config.allowUnfree = true;
 
@@ -187,6 +190,9 @@ in
   ] ++ (if stdenv.hostPlatform.system == "x86_64-linux"
         then [ google-chrome ]
         else [ chromium ]);
+
+  # Enlazar iconos para que Plasma los vea
+  environment.pathsToLink = [ "/share/icons" ];
 
   
 
@@ -238,6 +244,30 @@ in
   };
 
   # ============================================
+  # CREAR CARPETAS XDG USER DIRS EN ESPAÑOL AL BOOT
+  # ============================================
+  systemd.services.create-xdg-dirs = {
+    description = "Crear carpetas XDG user dirs en español al boot";
+    wantedBy = [ "multi-user.target" ];
+    serviceConfig = {
+      Type = "oneshot";
+      ExecStart = "${pkgs.bash}/bin/bash -c 'mkdir -p /home/aso/{Escritorio,Descargas,Imágenes,Música,Vídeos,Plantillas,Público}; chown -R aso:users /home/aso/{Escritorio,Descargas,Imágenes,Música,Vídeos,Plantillas,Público}'";
+    };
+  };
+
+  # ============================================
+  # DESCARGAR WALLPAPER AL BOOT SI NO EXISTE
+  # ============================================
+  systemd.services.download-wallpaper-on-boot = {
+    description = "Descargar wallpaper al boot si no existe";
+    wantedBy = [ "multi-user.target" ];
+    serviceConfig = {
+      Type = "oneshot";
+      ExecStart = "${pkgs.bash}/bin/bash -c 'if [ ! -f /var/lib/aedm/wallpaper.jpg ]; then ${pkgs.curl}/bin/curl -s --connect-timeout 5 -o /var/lib/aedm/wallpaper.jpg https://raw.githubusercontent.com/aedmadrid/OrdenadorASO/b676d6f4f354c3122c999c087adaf71871c8a134/.bg.jpg && chmod 644 /var/lib/aedm/wallpaper.jpg; fi'";
+    };
+  };
+
+  # ============================================
   # HOME MANAGER - Configuración del usuario aso
   # ============================================
   home-manager.useGlobalPkgs = true;
@@ -250,6 +280,19 @@ in
 
     home.stateVersion = "24.11";
     home.enableNixpkgsReleaseCheck = false;
+
+    # Configurar XDG user dirs en español
+    xdg.userDirs = {
+      enable = true;
+      desktop = "$HOME/Escritorio";
+      download = "$HOME/Descargas";
+      documents = "$HOME/Documentos";
+      pictures = "$HOME/Imágenes";
+      music = "$HOME/Música";
+      videos = "$HOME/Vídeos";
+      templates = "$HOME/Plantillas";
+      publicShare = "$HOME/Público";
+    };
 
     # Configuración de Plasma con plasma-manager
     programs.plasma = {
