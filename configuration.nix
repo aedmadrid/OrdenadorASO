@@ -208,40 +208,135 @@ in
       # Navegador con --guest (Chrome en x86, Chromium en ARM)
       browser-guest = {
         name = "Chrome";
-        comment = "Navegar en modo invitado";
+        comment = "Navegar en Internet";
         exec =
           if pkgs.stdenv.hostPlatform.system == "x86_64-linux"
           then "google-chrome-stable --guest %U"
           else "chromium --guest %U";
-        icon =
-          if pkgs.stdenv.hostPlatform.system == "x86_64-linux"
-          then "google-chrome"
-          else "chromium";
+        icon = "google-chrome";
         terminal = false;
         type = "Application";
         categories = [ "Network" "WebBrowser" ];
       };
 
+      # ============================================
+      # RENOMBRAR APLICACIONES DE KDE
+      # ============================================
 
-
-      # Ejemplo: Editor de texto
-      editor-aedm = {
-        name = "Editor de Código";
-        comment = "Zed Editor";
-        exec = "zeditor %F";
-        icon = "zed";
+      # Okular -> Visor PDF (icono de Acrobat)
+      "org.kde.okular" = {
+        name = "Visor PDF";
+        comment = "Visor de documentos PDF";
+        exec = "okular %U";
+        icon = "acroread";
         terminal = false;
         type = "Application";
-        categories = [ "Development" "TextEditor" ];
+        categories = [ "Office" "Viewer" ];
+        mimeType = [ "application/pdf" ];
       };
-    };
 
-    # Ocultar lanzadores de apps no deseadas
-    # (Esto crea .desktop files que ocultan las apps del menú)
-    xdg.desktopEntries = {
-      # Ocultar Elisa si no se eliminó completamente
+      # Gwenview -> Visor de Imágenes
+      "org.kde.gwenview" = {
+        name = "Visor de Imágenes";
+        comment = "Visor de imágenes";
+        exec = "gwenview %U";
+        icon = "gwenview";
+        terminal = false;
+        type = "Application";
+        categories = [ "Graphics" "Viewer" ];
+      };
+
+      # Kate -> Bloc de Notas
+      "org.kde.kate" = {
+        name = "Bloc de Notas";
+        comment = "Editor de texto";
+        exec = "kate %U";
+        icon = "kate";
+        terminal = false;
+        type = "Application";
+        categories = [ "Utility" "TextEditor" ];
+      };
+
+      # Dolphin -> Archivos
+      "org.kde.dolphin" = {
+        name = "Archivos";
+        comment = "Gestor de archivos";
+        exec = "dolphin %U";
+        icon = "system-file-manager";
+        terminal = false;
+        type = "Application";
+        categories = [ "System" "FileManager" ];
+      };
+
+      # ============================================
+      # OCULTAR APLICACIONES NO DESEADAS
+      # ============================================
+
+      # Ocultar Chrome/Chromium originales
+      "google-chrome" = {
+        name = "Google Chrome";
+        exec = "";
+        noDisplay = true;
+      };
+
+      "chromium-browser" = {
+        name = "Chromium";
+        exec = "";
+        noDisplay = true;
+      };
+
+      # Ocultar Elisa
       "org.kde.elisa" = {
         name = "Elisa";
+        exec = "";
+        noDisplay = true;
+      };
+
+      # Ocultar NixOS Manual
+      "nixos-manual" = {
+        name = "NixOS Manual";
+        exec = "";
+        noDisplay = true;
+      };
+
+      # Ocultar Editor del Menú (kmenuedit)
+      "org.kde.kmenuedit" = {
+        name = "Editor del Menú";
+        exec = "";
+        noDisplay = true;
+      };
+
+      # Ocultar Visor de Procesos que han fallado (drkonqi)
+      "org.kde.drkonqi" = {
+        name = "Visor de Procesos";
+        exec = "";
+        noDisplay = true;
+      };
+
+      # Ocultar XTerm
+      "xterm" = {
+        name = "XTerm";
+        exec = "";
+        noDisplay = true;
+      };
+
+      # Ocultar KWalletManager
+      "org.kde.kwalletmanager5" = {
+        name = "KWalletManager";
+        exec = "";
+        noDisplay = true;
+      };
+
+      # Ocultar Administrar impresión (system-config-printer)
+      "system-config-printer" = {
+        name = "Administrar impresión";
+        exec = "";
+        noDisplay = true;
+      };
+
+      # Ocultar también print-manager de KDE
+      "org.kde.print-manager" = {
+        name = "Print Manager";
         exec = "";
         noDisplay = true;
       };
