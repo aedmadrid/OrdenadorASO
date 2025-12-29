@@ -108,25 +108,19 @@
   hardware.bluetooth.enable = true;
 
 
-  environment.systemPackages = with pkgs;
-    let
-      # Chrome solo disponible en x86_64-linux, usa Chromium en otras plataformas
-      browser = if stdenv.hostPlatform.system == "x86_64-linux"
-                then google-chrome
-                else chromium;
-    in [
-      maliit-keyboard
-      maliit-framework
-      browser
-      vim
-      inkscape-with-extensions
-      onlyoffice-desktopeditors
-      vlc
-      unixtools.quota
-      zed-editor
-      git
-  ];
-
+  environment.systemPackages = with pkgs; [
+       maliit-keyboard
+       maliit-framework
+       vim
+       inkscape-with-extensions
+       onlyoffice-desktopeditors
+       vlc
+       unixtools.quota
+       zed-editor
+       git
+   ] ++ (if stdenv.hostPlatform.system == "x86_64-linux"
+         then [ google-chrome ]
+         else [ chromium ]);
 
   # Some programs need SUID wrappers, can be configured further or are
   # started in user sessions.
