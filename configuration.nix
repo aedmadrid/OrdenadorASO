@@ -247,7 +247,7 @@ in
     serviceConfig = {
       Type = "oneshot";
       User = "aso";
-      ExecStart = "${pkgs.bash}/bin/bash -c 'find /home/aso -mindepth 1 -maxdepth 1 ! -name Documentos ! -name .config -exec rm -rf {} +'";
+      ExecStart = "${pkgs.bash}/bin/bash -c 'find /home/aso -mindepth 1 -maxdepth 1 ! -name Documentos ! -name .config -exec sh -c \"rm -rf \\\"$1\\\" || true\" _ {} \\;'";
     };
   };
 
