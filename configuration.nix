@@ -302,44 +302,7 @@ exit 0
       workspace = {
         # Tema
         theme = "breeze";
-        colorScheme = "Breeze";
-        # Wallpaper (guardado en ruta del sistema para que persista)
-        wallpaper = "/var/lib/aedm/wallpaper.jpg";
-        # Iconos Elementary KDE
-        iconTheme = "Elementary-KDE";
-      };
-
-      # Atajos de teclado personalizados
-      shortcuts = {
-        "kwin"."Window Close" = "Alt+F4";
-        "kwin"."Window Fullscreen" = "Meta+F11";
-      };
-
-      # Desactivar KWallet
-      configFile = {
-        "kwalletrc"."Wallet"."Enabled" = {
-          value = false;
-        };
-        "kwalletrc"."Wallet"."First Use" = {
-          value = false;
-        };
-      };
-
-      # Panel inferior (barra de tareas)
-      panels = [
-        {
-          location = "bottom";
-          height = 44;
-          widgets = [
-            {
-              kickoff = {
-                icon = "nix-snowflake-white";
-                sortAlphabetically = true;
-              };
-            }
-            {
-              iconTasks = {
-                launchers = [
+        script = ''
                   "applications:org.kde.dolphin.desktop"
                   "applications:browser-guest.desktop"
                 ];
