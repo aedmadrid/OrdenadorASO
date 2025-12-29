@@ -23,8 +23,8 @@ let
     # Eliminado dontCheckForBrokenSymlinks, no existe en Nix
     installPhase = ''
       mkdir -p $out/share/icons/Elementary-KDE
-      # Convertir saltos de línea Windows a Unix
-      find . -type f -exec sed -i 's/\r$//' {} +
+      # Convertir saltos de línea Windows a Unix usando tr
+      find . -type f -exec sh -c 'tr -d "\r" < "$1" > "$1.tmp" && mv "$1.tmp" "$1"' _ {} \;
       cp -rL --no-preserve=mode . $out/share/icons/Elementary-KDE || true
       # Eliminar symlinks rotos
       find $out/share/icons/Elementary-KDE -xtype l -delete || true
