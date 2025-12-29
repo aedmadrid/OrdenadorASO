@@ -113,7 +113,6 @@
        maliit-framework
        vim
        inkscape-with-extensions
-       onlyoffice-desktopeditors
        vlc
        unixtools.quota
        zed-editor
