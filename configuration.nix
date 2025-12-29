@@ -164,8 +164,8 @@ in
   hardware.bluetooth.enable = true;
 
   # Desactivar KWallet para evitar popup de llavero
-  security.pam.services.sddm.kwallet.enable = false;
-  security.pam.services.login.kwallet.enable = false;
+  security.pam.services.sddm.kwallet.enable = lib.mkForce false;
+  security.pam.services.login.kwallet.enable = lib.mkForce false;
 
   # Excluir aplicaciones de KDE no deseadas
   environment.plasma6.excludePackages = with pkgs.kdePackages; [
