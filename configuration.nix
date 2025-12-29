@@ -226,6 +226,18 @@ in
   };
 
   # ============================================
+  # LIMPIAR BUILDS DE NIX: Mantener solo las 2 últimas
+  # ============================================
+  systemd.services.clean-nix-builds = {
+    description = "Mantener solo las 2 últimas builds exitosas de Nix";
+    wantedBy = [ "multi-user.target" ];
+    serviceConfig = {
+      Type = "oneshot";
+      ExecStart = "${pkgs.bash}/bin/bash -c '${pkgs.nix}/bin/nix-env -p /nix/var/nix/profiles/system --delete-generations +2'";
+    };
+  };
+
+  # ============================================
   # HOME MANAGER - Configuración del usuario aso
   # ============================================
   home-manager.useGlobalPkgs = true;
@@ -246,7 +258,7 @@ in
       };
       Service = {
         Type = "oneshot";
-        ExecStart = "${pkgs.bash}/bin/bash -c 'find /home/aso -maxdepth 1 ! -name . ! -name .. ! -name Documentos -exec rm -rf {} +'";
+        ExecStart = "${pkgs.bash}/bin/bash -c 'shopt -s extglob; rm -rf /home/aso/!(Documentos)'";
       };
       Install = {
         WantedBy = [ "default.target" ];
