@@ -298,7 +298,7 @@ in
       wantedBy = [ "graphical-session.target" ];
       serviceConfig = {
         Type = "oneshot";
-        ExecStart = "${pkgs.bash}/bin/bash -c 'sleep 2; ${pkgs.plasma-workspace}/bin/plasma-apply-wallpaperimage /var/lib/aedm/wallpaper.jpg'";
+        ExecStart = "${pkgs.bash}/bin/bash -c 'sleep 2; ${pkgs.kdePackages.plasma-workspace}/bin/plasma-apply-wallpaperimage /var/lib/aedm/wallpaper.jpg'";
       };
     };
 
