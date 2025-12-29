@@ -157,10 +157,11 @@ in
   };
 
   # Fondo de pantalla en SDDM (antes de login)
-  services.displayManager.sddm.extraConfig = ''
-    [Theme]
-    Background="/var/lib/aedm/wallpaper.jpg"
-  '';
+  services.displayManager.sddm.settings = {
+    Theme = {
+      Background = "/var/lib/aedm/wallpaper.jpg";
+    };
+  };
 
   # Allow unfree packages
   nixpkgs.config.allowUnfree = true;
