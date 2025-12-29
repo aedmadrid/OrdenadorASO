@@ -5,12 +5,9 @@
 { config, pkgs, lib, ... }:
 
 let
-  # Importar Home Manager y Plasma Manager
+  # Importar Home Manager
   home-manager = builtins.fetchTarball {
     url = "https://github.com/nix-community/home-manager/archive/release-25.11.tar.gz";
-  };
-  plasma-manager = builtins.fetchTarball {
-    url = "https://github.com/nix-community/plasma-manager/archive/trunk.tar.gz";
   };
   # Iconos Elementary KDE
   elementary-kde-icons = pkgs.stdenv.mkDerivation {
@@ -254,11 +251,7 @@ in
   home-manager.useGlobalPkgs = true;
   home-manager.useUserPackages = true;
 
-  home-manager.users.aso = { config, pkgs, lib, ... }: {
-    imports = [
-      (import "${plasma-manager}/modules")
-    ];
-
+  home-manager.users.aso = { config, pkgs, ... }: {
     home.stateVersion = "24.11";
     home.enableNixpkgsReleaseCheck = false;
 
@@ -275,68 +268,18 @@ in
       publicShare = "$HOME/Público";
     };
 
-    # Configuración de Plasma Desktop
-    programs.plasma = {
-      enable = true;
-      workspace = {
-        # Fondo de pantalla
-        wallpaperPlugin = "org.kde.image";
-      };
-      configFile = {
-        kdeglobals = {
-          General = {
-            ColorScheme = "BreezeLight";
-          };
-        };
-        # Iconos Elementary
-        kdeglobals.Icons.Theme = "Elementary-KDE";
-      };
-    };
-
-    # Desktop entries personalizados
-    xdg.desktopEntries = {
-      # Ocultar Visor de procesos que han fallado (coredump gui)
-      "org.kde.drkonqi.coredump.gui" = {
-        name = "Visor de procesos fallados";
-        exec = "";
-        noDisplay = true;
-      };
-
-      # Ocultar Vim
-      "vim" = {
-        name = "Vim";
-        exec = "";
-        noDisplay = true;
-      };
-
-      # Ocultar gvim también
-      "gvim" = {
-        name = "GVim";
-        exec = "";
-        noDisplay = true;
-      };
-
-      # Ocultar KWalletManager
-      "org.kde.kwalletmanager" = {
-        name = "KWalletManager";
-        exec = "";
-        noDisplay = true;
-      };
-
-      # Ocultar Preferencias del Sistema KDE
-      "systemsettings" = {
-        name = "Preferencias del sistema";
-        exec = "systemsettings";
-        icon = "systemsettings";
-        noDisplay = true;
-        terminal = false;
-        type = "Application";
-        categories = [ "Settings" ];
-      };
-    };
-
-    # Script para aplicar wallpaper después de que Plasma arranque
+    # Archivo de configuración de KDE con iconos y tema
     home.file = {
+      ".config/kdeglobals" = {
+        text = ''
+          [General]
+          ColorScheme=BreezeLight
+
+          [Icons]
+          Theme=Elementary-KDE
+        '';
+      };
+      # Script para aplicar wallpaper después de que Plasma arranque
       ".config/autostart/apply-wallpaper.desktop" = {
         text = ''
           [Desktop Entry]
