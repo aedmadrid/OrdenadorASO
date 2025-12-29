@@ -7,7 +7,7 @@
 let
   # Importar Home Manager y Plasma Manager
   home-manager = builtins.fetchTarball {
-    url = "https://github.com/nix-community/home-manager/archive/release-24.11.tar.gz";
+    url = "https://github.com/nix-community/home-manager/archive/master.tar.gz";
   };
   plasma-manager = builtins.fetchTarball {
     url = "https://github.com/nix-community/plasma-manager/archive/trunk.tar.gz";
@@ -181,6 +181,7 @@ in
     ];
 
     home.stateVersion = "24.11";
+    home.enableNixpkgsReleaseCheck = false;
 
     # Configuración de Plasma con plasma-manager
     programs.plasma = {
