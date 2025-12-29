@@ -199,6 +199,7 @@ in
       RemainAfterExit = true;
     };
     script = ''
+      set -e
       HOME_DIR="/home/aso"
       if [ -d "$HOME_DIR" ]; then
         # Guardar temporalmente los directorios/archivos que queremos mantener
@@ -235,7 +236,7 @@ in
         # Limpiar backup temporal
         rm -rf /tmp/aso-backup
       fi
-    '';
+    ''
   };
 
   # ============================================
