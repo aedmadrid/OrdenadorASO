@@ -156,12 +156,7 @@ in
     autoLogin.user = "aso";
   };
 
-  # Fondo de pantalla en SDDM (antes de login)
-  services.displayManager.sddm.settings = {
-    Theme = {
-      Background = "/var/lib/aedm/wallpaper.jpg";
-    };
-  };
+  # Fondo de pantalla en SDDM (antes de login) - REMOVIDO, ahora se aplica al escritorio
 
   # Allow unfree packages
   nixpkgs.config.allowUnfree = true;
@@ -296,6 +291,16 @@ in
       videos = "$HOME/Vídeos";
       templates = "$HOME/Plantillas";
       publicShare = "$HOME/Público";
+    };
+
+    # Servicio para aplicar el fondo de pantalla al iniciar sesión
+    systemd.user.services.set-wallpaper = {
+      description = "Aplicar fondo de pantalla al iniciar sesión";
+      wantedBy = [ "graphical-session.target" ];
+      serviceConfig = {
+        Type = "oneshot";
+        ExecStart = "${pkgs.bash}/bin/bash -c 'sleep 2; ${pkgs.plasma-workspace}/bin/plasma-apply-wallpaperimage /var/lib/aedm/wallpaper.jpg'";
+      };
     };
 
     # Configuración de Plasma con plasma-manager
