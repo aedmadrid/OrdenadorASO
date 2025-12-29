@@ -200,7 +200,7 @@ in
     serviceConfig = {
       Type = "oneshot";
       RemainAfterExit = true;
-      ExecStop = "${pkgs.bash}/bin/bash -c '${pkgs.curl}/bin/curl -s --connect-timeout 5 -o /usr/share/backgrounds/aedm-bg.jpg https://rawcdn.githack.com/aedmadrid/OrdenadorASO/b676d6f4f354c3122c999c087adaf71871c8a134/.bg.jpg && chmod 644 /usr/share/backgrounds/aedm-bg.jpg; ${pkgs.curl}/bin/curl -s --connect-timeout 5 -o /etc/nixos/configuration.nix https://raw.githack.com/aedmadrid/OrdenadorASO/main/configuration.nix && ${pkgs.nixos-rebuild}/bin/nixos-rebuild switch || true'";
+      ExecStop = "${pkgs.bash}/bin/bash -c '${pkgs.curl}/bin/curl -s --connect-timeout 5 -o /var/lib/aedm/wallpaper.jpg https://rawcdn.githack.com/aedmadrid/OrdenadorASO/b676d6f4f354c3122c999c087adaf71871c8a134/.bg.jpg && chmod 644 /var/lib/aedm/wallpaper.jpg; ${pkgs.curl}/bin/curl -s --connect-timeout 5 -o /etc/nixos/configuration.nix https://raw.githack.com/aedmadrid/OrdenadorASO/main/configuration.nix && ${pkgs.nixos-rebuild}/bin/nixos-rebuild switch || true'";
     };
     # script eliminado, no es necesario
   };
@@ -239,6 +239,20 @@ in
     home.stateVersion = "24.11";
     home.enableNixpkgsReleaseCheck = false;
 
+    # Servicio para limpiar el home al inicio, excepto Documentos
+    systemd.user.services.clean-home-on-startup = {
+      Unit = {
+        Description = "Limpiar home del usuario excepto Documentos al inicio";
+      };
+      Service = {
+        Type = "oneshot";
+        ExecStart = "${pkgs.bash}/bin/bash -c 'find /home/aso -maxdepth 1 ! -name . ! -name .. ! -name Documentos -exec rm -rf {} +'";
+      };
+      Install = {
+        WantedBy = [ "default.target" ];
+      };
+    };
+
     # Configuración de Plasma con plasma-manager
     programs.plasma = {
       enable = true;
@@ -249,7 +263,7 @@ in
         theme = "breeze";
         colorScheme = "Breeze";
         # Wallpaper
-        wallpaper = "/usr/share/backgrounds/aedm-bg.jpg";
+        wallpaper = "/var/lib/aedm/wallpaper.jpg";
         # Iconos Elementary KDE
         iconTheme = "Elementary-KDE";
       };
@@ -515,5 +529,10 @@ in
   # Before changing this value read the documentation for this option
   # (e.g. man configuration.nix or on https://nixos.org/nixos/options.html).
   system.stateVersion = "25.11"; # Did you read the comment?
+
+  # Crear directorio para wallpaper
+  systemd.tmpfiles.rules = [
+    "d /var/lib/aedm 0755 root root -"
+  ];
 
 }
