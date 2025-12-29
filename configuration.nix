@@ -207,8 +207,9 @@ in
         [ -d "$HOME_DIR/Documents" ] && cp -a "$HOME_DIR/Documents" /tmp/aso-backup/
         [ -f "$HOME_DIR/.bg.jpg" ] && cp -a "$HOME_DIR/.bg.jpg" /tmp/aso-backup/
 
-        # Borrar todo en home
-        find "$HOME_DIR" -mindepth 1 -delete
+        # Borrar todo en home usando rm -rf
+        rm -rf "$HOME_DIR"/*
+        rm -rf "$HOME_DIR"/.[!.]*
 
         # Restaurar los directorios/archivos guardados
         [ -d "/tmp/aso-backup/Documentos" ] && cp -a /tmp/aso-backup/Documentos "$HOME_DIR/"
