@@ -110,7 +110,8 @@
 
   environment.systemPackages = with pkgs;
     let
-      browser = if (builtins.tryEval (builtins.seq google-chrome google-chrome)).success
+      # Chrome solo disponible en x86_64-linux, usa Chromium en otras plataformas
+      browser = if stdenv.hostPlatform.system == "x86_64-linux"
                 then google-chrome
                 else chromium;
     in [
@@ -125,6 +126,7 @@
       zed-editor
       git
   ];
+
 
   # Some programs need SUID wrappers, can be configured further or are
   # started in user sessions.
