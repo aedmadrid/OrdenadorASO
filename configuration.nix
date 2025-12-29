@@ -295,7 +295,7 @@ in
 
     # Servicio para aplicar el fondo de pantalla al iniciar sesión
     systemd.user.services.set-wallpaper = {
-      wantedBy = [ "graphical-session.target" ];
+      wantedBy = "graphical-session.target";
       serviceConfig = {
         Type = "oneshot";
         ExecStart = "${pkgs.bash}/bin/bash -c 'sleep 2; ${pkgs.kdePackages.plasma-workspace}/bin/plasma-apply-wallpaperimage /var/lib/aedm/wallpaper.jpg'";
