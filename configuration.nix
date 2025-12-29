@@ -107,16 +107,23 @@
 
   hardware.bluetooth.enable = true;
 
-  environment.systemPackages = with pkgs; [
+
+  environment.systemPackages = with pkgs;
+    let
+      browser = if (builtins.tryEval (builtins.seq google-chrome google-chrome)).success
+                then google-chrome
+                else chromium;
+    in [
       maliit-keyboard
       maliit-framework
-      pkgs.google-chrome
+      browser
       vim
-      pkgs.inkscape-with-extensions
-      pkgs.onlyoffice-desktopeditors
-      pkgs.vlc
-      pkgs.unixtools.quota
-      pkgs.zed-editor
+      inkscape-with-extensions
+      onlyoffice-desktopeditors
+      vlc
+      unixtools.quota
+      zed-editor
+    ];
 
   ];
 
