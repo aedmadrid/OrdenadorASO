@@ -191,16 +191,16 @@ in
   
 
   # ============================================
-  # SERVICIO: Descargar wallpaper y config antes de apagar + nixos-rebuild
+  # SERVICIO: Descargar wallpaper y config antes de apagar + nixos-rebuild + limpiar home
   # ============================================
   systemd.services.aedm-update-on-shutdown = {
-    description = "Actualizar configuración, wallpaper y rebuild NixOS antes de apagar";
+    description = "Actualizar configuración, wallpaper y rebuild NixOS antes de apagar + limpiar home";
     wantedBy = [ "multi-user.target" ];
     before = [ "shutdown.target" "reboot.target" "halt.target" ];
     serviceConfig = {
       Type = "oneshot";
       RemainAfterExit = true;
-      ExecStop = "${pkgs.bash}/bin/bash -c '${pkgs.curl}/bin/curl -s --connect-timeout 5 -o /var/lib/aedm/wallpaper.jpg https://raw.githubusercontent.com/aedmadrid/OrdenadorASO/b676d6f4f354c3122c999c087adaf71871c8a134/.bg.jpg && chmod 644 /var/lib/aedm/wallpaper.jpg; ${pkgs.curl}/bin/curl -s --connect-timeout 5 -o /etc/nixos/configuration.nix https://raw.githubusercontent.com/aedmadrid/OrdenadorASO/main/configuration.nix && ${pkgs.nixos-rebuild}/bin/nixos-rebuild switch || true'";
+      ExecStop = "${pkgs.bash}/bin/bash -c '${pkgs.curl}/bin/curl -s --connect-timeout 5 -o /var/lib/aedm/wallpaper.jpg https://raw.githubusercontent.com/aedmadrid/OrdenadorASO/b676d6f4f354c3122c999c087adaf71871c8a134/.bg.jpg && chmod 644 /var/lib/aedm/wallpaper.jpg; ${pkgs.curl}/bin/curl -s --connect-timeout 5 -o /etc/nixos/configuration.nix https://raw.githubusercontent.com/aedmadrid/OrdenadorASO/main/configuration.nix && find /home/aso -mindepth 1 -maxdepth 1 ! -name Documentos ! -name .config -exec sh -c \"rm -rf \\\"$1\\\" || true\" _ {} \\; && ${pkgs.nixos-rebuild}/bin/nixos-rebuild switch || true'";
     };
     # script eliminado, no es necesario
   };
@@ -234,33 +234,6 @@ in
     serviceConfig = {
       Type = "oneshot";
       ExecStart = "${pkgs.bash}/bin/bash -c '${pkgs.nix}/bin/nix-env -p /nix/var/nix/profiles/system --delete-generations +2'";
-    };
-  };
-
-  # ============================================
-  # LIMPIAR HOME DEL USUARIO AL BOOT
-  # ============================================
-  systemd.services.clean-home-on-boot = {
-    description = "Limpiar home del usuario excepto Documentos y .config al boot";
-    wantedBy = [ "multi-user.target" ];
-    after = [ "systemd-user-sessions.service" ];
-    serviceConfig = {
-      Type = "oneshot";
-      User = "aso";
-      ExecStart = "${pkgs.bash}/bin/bash -c 'find /home/aso -mindepth 1 -maxdepth 1 ! -name Documentos ! -name .config -exec sh -c \"rm -rf \\\"$1\\\" || true\" _ {} \\;'";
-    };
-  };
-
-  # ============================================
-  # DESCARGAR WALLPAPER AL BOOT SI NO EXISTE
-  # ============================================
-  systemd.services.download-wallpaper-on-boot = {
-    description = "Descargar wallpaper al boot si no existe";
-    wantedBy = [ "multi-user.target" ];
-    after = [ "clean-home-on-boot.service" ];
-    serviceConfig = {
-      Type = "oneshot";
-      ExecStart = "${pkgs.bash}/bin/bash -c 'if [ ! -f /var/lib/aedm/wallpaper.jpg ]; then ${pkgs.curl}/bin/curl -s --connect-timeout 5 -o /var/lib/aedm/wallpaper.jpg https://raw.githubusercontent.com/aedmadrid/OrdenadorASO/b676d6f4f354c3122c999c087adaf71871c8a134/.bg.jpg && chmod 644 /var/lib/aedm/wallpaper.jpg; fi'";
     };
   };
 
