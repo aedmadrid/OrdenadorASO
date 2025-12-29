@@ -152,7 +152,6 @@ in
     khelpcenter  # Centro de ayuda
     oxygen       # Tema antiguo
     plasma-browser-integration
-    kwrite       # Editor de texto duplicado (usamos Kate)
   ];
 
   environment.systemPackages = with pkgs; [
