@@ -124,8 +124,6 @@
       unixtools.quota
       zed-editor
       git
-    ];
-
   ];
 
   # Some programs need SUID wrappers, can be configured further or are
