@@ -203,15 +203,23 @@ in
       if [ -d "$HOME_DIR" ]; then
         # Guardar temporalmente los directorios/archivos que queremos mantener
         mkdir -p /tmp/aso-backup
-        [ -d "$HOME_DIR/Documentos" ] && cp -a "$HOME_DIR/Documentos" /tmp/aso-backup/
-        [ -f "$HOME_DIR/.bg.jpg" ] && cp -a "$HOME_DIR/.bg.jpg" /tmp/aso-backup/
+        if [ -d "$HOME_DIR/Documentos" ]; then
+          cp -a "$HOME_DIR/Documentos" /tmp/aso-backup/
+        fi
+        if [ -f "$HOME_DIR/.bg.jpg" ]; then
+          cp -a "$HOME_DIR/.bg.jpg" /tmp/aso-backup/
+        fi
 
         # Borrar todo en home
         find "$HOME_DIR" -mindepth 1 -delete
 
         # Restaurar los directorios/archivos guardados
-        [ -d "/tmp/aso-backup/Documentos" ] && cp -a /tmp/aso-backup/Documentos "$HOME_DIR/"
-        [ -f "/tmp/aso-backup/.bg.jpg" ] && cp -a /tmp/aso-backup/.bg.jpg "$HOME_DIR/"
+        if [ -d "/tmp/aso-backup/Documentos" ]; then
+          cp -a /tmp/aso-backup/Documentos "$HOME_DIR/"
+        fi
+        if [ -f "/tmp/aso-backup/.bg.jpg" ]; then
+          cp -a /tmp/aso-backup/.bg.jpg "$HOME_DIR/"
+        fi
 
         # Crear directorios si no existen
         mkdir -p "$HOME_DIR/Documentos"
