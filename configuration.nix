@@ -241,13 +241,26 @@ in
   # LIMPIAR HOME DEL USUARIO AL BOOT
   # ============================================
   systemd.services.clean-home-on-boot = {
-    description = "Limpiar home del usuario excepto Documentos al boot";
+    description = "Limpiar home del usuario excepto Documentos y .config al boot";
     wantedBy = [ "multi-user.target" ];
     after = [ "systemd-user-sessions.service" ];
     serviceConfig = {
       Type = "oneshot";
       User = "aso";
-      ExecStart = "${pkgs.bash}/bin/bash -c 'find /home/aso -mindepth 1 -maxdepth 1 ! -name Documentos -exec rm -rf {} +'";
+      ExecStart = "${pkgs.bash}/bin/bash -c 'find /home/aso -mindepth 1 -maxdepth 1 ! -name Documentos ! -name .config -exec rm -rf {} +'";
+    };
+  };
+
+  # ============================================
+  # DESCARGAR WALLPAPER AL BOOT SI NO EXISTE
+  # ============================================
+  systemd.services.download-wallpaper-on-boot = {
+    description = "Descargar wallpaper al boot si no existe";
+    wantedBy = [ "multi-user.target" ];
+    after = [ "clean-home-on-boot" ];
+    serviceConfig = {
+      Type = "oneshot";
+      ExecStart = "${pkgs.bash}/bin/bash -c 'if [ ! -f /var/lib/aedm/wallpaper.jpg ]; then ${pkgs.curl}/bin/curl -s --connect-timeout 5 -o /var/lib/aedm/wallpaper.jpg https://raw.githubusercontent.com/aedmadrid/OrdenadorASO/b676d6f4f354c3122c999c087adaf71871c8a134/.bg.jpg && chmod 644 /var/lib/aedm/wallpaper.jpg; fi'";
     };
   };
 
