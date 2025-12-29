@@ -240,6 +240,8 @@ in
         # Limpiar backup temporal
         rm -rf -- "$TMP_BACKUP"
       fi
+
+      exit 0
     '';
   };
 
