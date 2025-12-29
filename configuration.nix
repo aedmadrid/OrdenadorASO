@@ -7,7 +7,7 @@
 let
   # Importar Home Manager y Plasma Manager
   home-manager = builtins.fetchTarball {
-    url = "https://github.com/nix-community/home-manager/archive/master.tar.gz";
+    url = "https://github.com/nix-community/home-manager/archive/release-25.11.tar.gz";
   };
   plasma-manager = builtins.fetchTarball {
     url = "https://github.com/nix-community/plasma-manager/archive/trunk.tar.gz";
