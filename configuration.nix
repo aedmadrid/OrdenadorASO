@@ -192,25 +192,11 @@ in
   };
 
   # ============================================
-  # SERVICIO: Aplicar wallpaper después de que Plasma arranque (usuario)
-  # ============================================
-  systemd.user.services.apply-wallpaper = {
-    description = "Aplicar wallpaper a Plasma Desktop";
-    after = [ "graphical-session-pre.target" ];
-    partOf = [ "graphical-session.target" ];
-    serviceConfig = {
-      Type = "oneshot";
-      ExecStart = "${pkgs.bash}/bin/bash -c 'sleep 3 && ${pkgs.kdePackages.plasma-workspace}/bin/plasma-apply-wallpaperimage /var/lib/aedm/wallpaper.jpg 2>/dev/null || true'";
-      StandardOutput = "journal";
-      StandardError = "journal";
-    };
-  };
-
-  # ============================================
   # REINICIO AUTOMÁTICO DIARIO A LAS 6:00 AM
   # ============================================
   systemd.services.daily-reboot = {
     description = "Reinicio automático diario";
+    wantedBy = [ "multi-user.target" ];
     serviceConfig = {
       Type = "oneshot";
       ExecStart = "${pkgs.systemd}/bin/systemctl reboot";
@@ -346,6 +332,19 @@ in
         terminal = false;
         type = "Application";
         categories = [ "Settings" ];
+      };
+    };
+
+    # Script para aplicar wallpaper después de que Plasma arranque
+    home.file = {
+      ".config/autostart/apply-wallpaper.desktop" = {
+        text = ''
+          [Desktop Entry]
+          Type=Application
+          Name=Apply Wallpaper
+          Exec=${pkgs.bash}/bin/bash -c 'sleep 3 && ${pkgs.kdePackages.plasma-workspace}/bin/plasma-apply-wallpaperimage /var/lib/aedm/wallpaper.jpg 2>/dev/null || true'
+          NoDisplay=true
+        '';
       };
     };
   };
