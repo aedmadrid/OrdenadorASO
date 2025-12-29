@@ -295,7 +295,6 @@ in
 
     # Servicio para aplicar el fondo de pantalla al iniciar sesión
     systemd.user.services.set-wallpaper = {
-      description = "Aplicar fondo de pantalla al iniciar sesión";
       wantedBy = [ "graphical-session.target" ];
       serviceConfig = {
         Type = "oneshot";
