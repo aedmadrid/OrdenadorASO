@@ -123,6 +123,7 @@
       vlc
       unixtools.quota
       zed-editor
+      git
     ];
 
   ];
