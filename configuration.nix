@@ -180,7 +180,7 @@ in
       (import "${plasma-manager}/modules")
     ];
 
-    home.stateVersion = "25.11";
+    home.stateVersion = "24.11";
 
     # Configuración de Plasma con plasma-manager
     programs.plasma = {
