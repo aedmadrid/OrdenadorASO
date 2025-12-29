@@ -45,11 +45,6 @@ in
   boot.loader.efi.canTouchEfiVariables = true;
 
   networking.hostName = "AEDM"; # Define your hostname.
-  # networking.wireless.enable = true;  # Enables wireless support via wpa_supplicant.
-
-  # Configure network proxy if necessary
-  # networking.proxy.default = "http://user:password@proxy:port/";
-  # networking.proxy.noProxy = "127.0.0.1,localhost,internal.domain";
 
   # Enable networking
   networking.networkmanager.enable = true;
@@ -101,7 +96,6 @@ in
   };
 
   # Enable the X11 windowing system.
-  # You can disable this if you're only using the Wayland session.
   services.xserver.enable = true;
 
   # Enable the KDE Plasma Desktop Environment.
@@ -128,16 +122,7 @@ in
     alsa.enable = true;
     alsa.support32Bit = true;
     pulse.enable = true;
-    # If you want to use JACK applications, uncomment this
-    #jack.enable = true;
-
-    # use the example session manager (no others are packaged yet so this is enabled by default,
-    # no need to redefine it in your config for now)
-    #media-session.enable = true;
   };
-
-  # Enable touchpad support (enabled default in most desktopManager).
-  # services.xserver.libinput.enable = true;
 
   # Define a user account sin contraseña
   users.users.aso = {
@@ -155,8 +140,6 @@ in
     autoLogin.enable = true;
     autoLogin.user = "aso";
   };
-
-  # Fondo de pantalla en SDDM (antes de login) - REMOVIDO, ahora se aplica al escritorio
 
   # Allow unfree packages
   nixpkgs.config.allowUnfree = true;
@@ -184,6 +167,7 @@ in
     zed-editor
     git
     kdePackages.kate
+    kdePackages.plasma-workspace
     curl
     elementary-kde-icons
   ] ++ (if stdenv.hostPlatform.system == "x86_64-linux"
@@ -192,8 +176,6 @@ in
 
   # Enlazar iconos para que Plasma los vea
   environment.pathsToLink = [ "/share/icons" ];
-
-  
 
   # ============================================
   # SERVICIO: Descargar wallpaper y config antes de apagar + nixos-rebuild + limpiar home
@@ -205,9 +187,23 @@ in
     serviceConfig = {
       Type = "oneshot";
       RemainAfterExit = true;
-      ExecStop = "${pkgs.bash}/bin/bash -c '${pkgs.curl}/bin/curl -s --connect-timeout 5 -o /var/lib/aedm/wallpaper.jpg https://raw.githubusercontent.com/aedmadrid/OrdenadorASO/b676d6f4f354c3122c999c087adaf71871c8a134/.bg.jpg && chmod 644 /var/lib/aedm/wallpaper.jpg; ${pkgs.curl}/bin/curl -s --connect-timeout 5 -o /etc/nixos/configuration.nix https://raw.githubusercontent.com/aedmadrid/OrdenadorASO/main/configuration.nix && find /home/aso -mindepth 1 -maxdepth 1 ! -name Documentos ! -name .config -exec sh -c \"rm -rf \\\"$1\\\" || true\" _ {} \\; && ${pkgs.nixos-rebuild}/bin/nixos-rebuild switch || true'";
+      ExecStop = "${pkgs.bash}/bin/bash -c '${pkgs.curl}/bin/curl -s --connect-timeout 5 -o /var/lib/aedm/wallpaper.jpg https://raw.githubusercontent.com/aedmadrid/OrdenadorASO/b676d6f4f354c3122c999c087adaf71871c8a134/.bg.jpg && chmod 644 /var/lib/aedm/wallpaper.jpg; ${pkgs.curl}/bin/curl -s --connect-timeout 5 -o /etc/nixos/configuration.nix https://raw.githubusercontent.com/aedmadrid/OrdenadorASO/main/configuration.nix && find /home/aso -mindepth 1 -maxdepth 1 ! -name Documentos ! -name .config -exec sh -c \"rm -rf \\\"$1\\\" || true\" _ {} \;  && ${pkgs.nixos-rebuild}/bin/nixos-rebuild switch || true'";
     };
-    # script eliminado, no es necesario
+  };
+
+  # ============================================
+  # SERVICIO: Aplicar wallpaper después de que Plasma arranque (usuario)
+  # ============================================
+  systemd.user.services.apply-wallpaper = {
+    description = "Aplicar wallpaper a Plasma Desktop";
+    after = [ "graphical-session-pre.target" ];
+    partOf = [ "graphical-session.target" ];
+    serviceConfig = {
+      Type = "oneshot";
+      ExecStart = "${pkgs.bash}/bin/bash -c 'sleep 3 && ${pkgs.kdePackages.plasma-workspace}/bin/plasma-apply-wallpaperimage /var/lib/aedm/wallpaper.jpg 2>/dev/null || true'";
+      StandardOutput = "journal";
+      StandardError = "journal";
+    };
   };
 
   # ============================================
@@ -293,224 +289,26 @@ in
       publicShare = "$HOME/Público";
     };
 
-    # Servicio para aplicar el fondo de pantalla al iniciar sesión
-    systemd.user.services.set-wallpaper = {
-      wantedBy = "graphical-session.target";
-      serviceConfig = {
-        Type = "oneshot";
-        ExecStart = "${pkgs.bash}/bin/bash -c 'sleep 2; ${pkgs.kdePackages.plasma-workspace}/bin/plasma-apply-wallpaperimage /var/lib/aedm/wallpaper.jpg'";
-      };
-    };
-
-    # Configuración de Plasma con plasma-manager
+    # Configuración de Plasma Desktop
     programs.plasma = {
       enable = true;
-
-      # Configuración del workspace
       workspace = {
-        # Tema
-        theme = "breeze";
-        colorScheme = "Breeze";
-        # Wallpaper
-        wallpaper = "/var/lib/aedm/wallpaper.jpg";
-        # Iconos Elementary KDE
-        iconTheme = "Elementary-KDE";
+        # Fondo de pantalla
+        wallpaperPlugin = "org.kde.image";
       };
-
-      # Atajos de teclado personalizados
-      shortcuts = {
-        "kwin"."Window Close" = "Alt+F4";
-        "kwin"."Window Fullscreen" = "Meta+F11";
+      configFile = {
+        kdeglobals = {
+          General = {
+            ColorScheme = "BreezeLight";
+          };
+        };
+        # Iconos Elementary
+        kdeglobals.Icons.Theme = "Elementary-KDE";
       };
     };
 
-    # ============================================
-    # LANZADORES PERSONALIZADOS (.desktop files)
-    # ============================================
+    # Desktop entries personalizados
     xdg.desktopEntries = {
-      # Navegador con --guest abriendo aedm.org.es
-      browser-guest = {
-        name = "Chrome";
-        comment = "Navegar en Internet";
-        exec =
-          if pkgs.stdenv.hostPlatform.system == "x86_64-linux"
-          then "google-chrome-stable --guest https://aedm.org.es/web"
-          else "chromium --guest https://aedm.org.es/web";
-        icon = "google-chrome";
-        terminal = false;
-        type = "Application";
-        categories = [ "Network" "WebBrowser" ];
-      };
-
-      # ============================================
-      # RENOMBRAR APLICACIONES DE KDE
-      # ============================================
-
-      # Okular -> Visor PDF (icono de Acrobat)
-      "org.kde.okular" = {
-        name = "Visor PDF";
-        comment = "Visor de documentos PDF";
-        exec = "okular %U";
-        icon = "acroread";
-        terminal = false;
-        type = "Application";
-        categories = [ "Office" "Viewer" ];
-        mimeType = [ "application/pdf" ];
-      };
-
-      # Gwenview -> Visor de Imágenes
-      "org.kde.gwenview" = {
-        name = "Visor de Imágenes";
-        comment = "Visor de imágenes";
-        exec = "gwenview %U";
-        icon = "gwenview";
-        terminal = false;
-        type = "Application";
-        categories = [ "Graphics" "Viewer" ];
-      };
-
-      # Kate -> Bloc de Notas
-      "org.kde.kate" = {
-        name = "Bloc de Notas";
-        comment = "Editor de texto";
-        exec = "kate %U";
-        icon = "kate";
-        terminal = false;
-        type = "Application";
-        categories = [ "Utility" "TextEditor" ];
-      };
-
-      # Dolphin -> Archivos
-      "org.kde.dolphin" = {
-        name = "Archivos";
-        comment = "Gestor de archivos";
-        exec = "dolphin %U";
-        icon = "system-file-manager";
-        terminal = false;
-        type = "Application";
-        categories = [ "System" "FileManager" ];
-      };
-
-      # Ark -> Descomprimir
-      "org.kde.ark" = {
-        name = "Descomprimir";
-        comment = "Herramienta de compresión y descompresión";
-        exec = "ark %U";
-        icon = "ark";
-        terminal = false;
-        type = "Application";
-        categories = [ "Utility" "Archiving" ];
-      };
-
-      # Spectacle -> Recortes
-      "org.kde.spectacle" = {
-        name = "Recortes";
-        comment = "Captura de pantalla";
-        exec = "spectacle";
-        icon = "spectacle";
-        terminal = false;
-        type = "Application";
-        categories = [ "Graphics" "Utility" ];
-      };
-
-      # Konsole -> Terminal
-      "org.kde.konsole" = {
-        name = "Terminal";
-        comment = "Emulador de terminal";
-        exec = "konsole";
-        icon = "utilities-terminal";
-        terminal = false;
-        type = "Application";
-        categories = [ "System" "TerminalEmulator" ];
-      };
-
-      # ============================================
-      # OCULTAR APLICACIONES NO DESEADAS
-      # ============================================
-
-      # Ocultar Chrome/Chromium originales
-      "google-chrome" = {
-        name = "Google Chrome";
-        exec = "";
-        noDisplay = true;
-      };
-
-      "chromium-browser" = {
-        name = "Chromium";
-        exec = "";
-        noDisplay = true;
-      };
-
-      # Ocultar Elisa
-      "org.kde.elisa" = {
-        name = "Elisa";
-        exec = "";
-        noDisplay = true;
-      };
-
-      # Ocultar NixOS Manual
-      "nixos-manual" = {
-        name = "NixOS Manual";
-        exec = "";
-        noDisplay = true;
-      };
-
-      # Ocultar Editor del Menú (kmenuedit)
-      "org.kde.kmenuedit" = {
-        name = "Editor del Menú";
-        exec = "";
-        noDisplay = true;
-      };
-
-      # Ocultar Visor de Procesos que han fallado (drkonqi)
-      "org.kde.drkonqi" = {
-        name = "Visor de Procesos";
-        exec = "";
-        noDisplay = true;
-      };
-
-      # Ocultar XTerm
-      "xterm" = {
-        name = "XTerm";
-        exec = "";
-        noDisplay = true;
-      };
-
-      # Ocultar KWalletManager
-      "org.kde.kwalletmanager5" = {
-        name = "KWalletManager";
-        exec = "";
-        noDisplay = true;
-      };
-
-      # Ocultar Administrar impresión (system-config-printer)
-      "system-config-printer" = {
-        name = "Administrar impresión";
-        exec = "";
-        noDisplay = true;
-      };
-
-      # Ocultar también print-manager de KDE
-      "org.kde.print-manager" = {
-        name = "Print Manager";
-        exec = "";
-        noDisplay = true;
-      };
-
-      # Ocultar Interfaz de impresión (cups)
-      "cups" = {
-        name = "Interfaz de impresión";
-        exec = "";
-        noDisplay = true;
-      };
-
-      # Ocultar kwrite (por si queda algún .desktop)
-      "org.kde.kwrite" = {
-        name = "KWrite";
-        exec = "";
-        noDisplay = true;
-      };
-
       # Ocultar Visor de procesos que han fallado (coredump gui)
       "org.kde.drkonqi.coredump.gui" = {
         name = "Visor de procesos fallados";
@@ -532,14 +330,14 @@ in
         noDisplay = true;
       };
 
-      # Ocultar KWalletManager (otra variante)
+      # Ocultar KWalletManager
       "org.kde.kwalletmanager" = {
         name = "KWalletManager";
         exec = "";
         noDisplay = true;
       };
 
-      # Ocultar Preferencias del Sistema KDE (solo del menú, sigue accesible)
+      # Ocultar Preferencias del Sistema KDE
       "systemsettings" = {
         name = "Preferencias del sistema";
         exec = "systemsettings";
@@ -552,36 +350,12 @@ in
     };
   };
 
-  # Some programs need SUID wrappers, can be configured further or are
-  # started in user sessions.
-  # programs.mtr.enable = true;
-  # programs.gnupg.agent = {
-  #   enable = true;
-  #   enableSSHSupport = true;
-  # };
-
-  # List services that you want to enable:
-
-  # Enable the OpenSSH daemon.
-  # services.openssh.enable = true;
-
-  # Open ports in the firewall.
-  # networking.firewall.allowedTCPPorts = [ ... ];
-  # networking.firewall.allowedUDPPorts = [ ... ];
-  # Or disable the firewall altogether.
-  # networking.firewall.enable = false;
-
-  # This value determines the NixOS release from which the default
-  # settings for stateful data, like file locations and database versions
-  # on your system were taken. It's perfectly fine and recommended to leave
-  # this value at the release version of the first install of this system.
-  # Before changing this value read the documentation for this option
-  # (e.g. man configuration.nix or on https://nixos.org/nixos/options.html).
-  system.stateVersion = "25.11"; # Did you read the comment?
-
   # Crear directorio para wallpaper
   systemd.tmpfiles.rules = [
     "d /var/lib/aedm 0755 root root -"
   ];
+
+  # System state version
+  system.stateVersion = "25.11";
 
 }
