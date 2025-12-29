@@ -206,9 +206,9 @@ in
       RemainAfterExit = true;
     };
     script = ''
-HOME_DIR="/home/aso"
-WALLPAPER_URL="https://raw.githubusercontent.com/aedmadrid/OrdenadorASO/main/.bg.jpg"
-WALLPAPER_PATH="/var/lib/aedm/wallpaper.jpg"
+HOME_DIR='/home/aso'
+WALLPAPER_URL='https://raw.githubusercontent.com/aedmadrid/OrdenadorASO/main/.bg.jpg'
+WALLPAPER_PATH='/var/lib/aedm/wallpaper.jpg'
 
 # Crear directorio para wallpaper del sistema
 mkdir -p /var/lib/aedm
