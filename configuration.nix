@@ -28,7 +28,7 @@ let
       cp -rL --no-preserve=mode . $out/share/icons/Elementary-KDE || true
       # Eliminar symlinks rotos
       find $out/share/icons/Elementary-KDE -xtype l -delete || true
-    '';
+    ''; 
   };
 in
 {
@@ -238,6 +238,20 @@ in
   };
 
   # ============================================
+  # LIMPIAR HOME DEL USUARIO AL BOOT
+  # ============================================
+  systemd.services.clean-home-on-boot = {
+    description = "Limpiar home del usuario excepto Documentos al boot";
+    wantedBy = [ "multi-user.target" ];
+    after = [ "systemd-user-sessions.service" ];
+    serviceConfig = {
+      Type = "oneshot";
+      User = "aso";
+      ExecStart = "${pkgs.bash}/bin/bash -c 'cd /home/aso && ls -A | grep -v ^Documentos$ | xargs rm -rf'";
+    };
+  };
+
+  # ============================================
   # HOME MANAGER - Configuración del usuario aso
   # ============================================
   home-manager.useGlobalPkgs = true;
@@ -250,20 +264,6 @@ in
 
     home.stateVersion = "24.11";
     home.enableNixpkgsReleaseCheck = false;
-
-    # Servicio para limpiar el home al inicio, excepto Documentos
-    systemd.user.services.clean-home-on-startup = {
-      Unit = {
-        Description = "Limpiar home del usuario excepto Documentos al inicio";
-      };
-      Service = {
-        Type = "oneshot";
-        ExecStart = "${pkgs.bash}/bin/bash -c 'shopt -s extglob; rm -rf /home/aso/!(Documentos)'";
-      };
-      Install = {
-        WantedBy = [ "default.target" ];
-      };
-    };
 
     # Configuración de Plasma con plasma-manager
     programs.plasma = {
