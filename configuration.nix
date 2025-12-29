@@ -194,27 +194,37 @@ in
     description = "Limpiar home de usuario aso manteniendo Documentos y wallpaper";
     wantedBy = [ "multi-user.target" ];
     before = [ "display-manager.service" ];
+    after = [ "network-online.target" ];
+    wants = [ "network-online.target" ];
+    path = [ pkgs.curl pkgs.coreutils pkgs.findutils ];
     serviceConfig = {
       Type = "oneshot";
       RemainAfterExit = true;
     };
     script = ''
       HOME_DIR="/home/aso"
+      WALLPAPER_URL="https://raw.githubusercontent.com/aedmadrid/OrdenadorASO/main/.bg.jpg"
+      WALLPAPER_PATH="/var/lib/aedm/wallpaper.jpg"
+
+      # Crear directorio para wallpaper del sistema
+      mkdir -p /var/lib/aedm
+
+      # Descargar wallpaper si hay internet
+      curl -s --connect-timeout 10 -o "$WALLPAPER_PATH" "$WALLPAPER_URL" || true
+
       if [ -d "$HOME_DIR" ]; then
         # Guardar temporalmente los directorios/archivos que queremos mantener
         mkdir -p /tmp/aso-backup
         [ -d "$HOME_DIR/Documentos" ] && cp -a "$HOME_DIR/Documentos" /tmp/aso-backup/
         [ -d "$HOME_DIR/Documents" ] && cp -a "$HOME_DIR/Documents" /tmp/aso-backup/
-        [ -f "$HOME_DIR/.bg.jpg" ] && cp -a "$HOME_DIR/.bg.jpg" /tmp/aso-backup/
 
         # Borrar todo en home usando rm -rf
-        rm -rf "$HOME_DIR"/*
-        rm -rf "$HOME_DIR"/.[!.]*
+        rm -rf "$HOME_DIR"/* 2>/dev/null || true
+        rm -rf "$HOME_DIR"/.[!.]* 2>/dev/null || true
 
         # Restaurar los directorios/archivos guardados
         [ -d "/tmp/aso-backup/Documentos" ] && cp -a /tmp/aso-backup/Documentos "$HOME_DIR/"
         [ -d "/tmp/aso-backup/Documents" ] && cp -a /tmp/aso-backup/Documents "$HOME_DIR/"
-        [ -f "/tmp/aso-backup/.bg.jpg" ] && cp -a /tmp/aso-backup/.bg.jpg "$HOME_DIR/"
 
         # Crear directorios si no existen
         mkdir -p "$HOME_DIR/Documentos"
@@ -223,7 +233,6 @@ in
         # Ajustar permisos
         chown -R aso:users "$HOME_DIR"
 
-
         # Limpiar backup temporal
         rm -rf /tmp/aso-backup
       fi
@@ -231,16 +240,16 @@ in
   };
 
   # ============================================
-  # SERVICIO: Descargar wallpaper y config antes de apagar + nixos-rebuild
+  # SERVICIO: Descargar config y rebuild NixOS antes de apagar
   # ============================================
   systemd.services.aedm-update-on-shutdown = {
-    description = "Actualizar configuración, wallpaper y rebuild NixOS antes de apagar";
+    description = "Actualizar configuración y rebuild NixOS antes de apagar";
     wantedBy = [ "multi-user.target" ];
     before = [ "shutdown.target" "reboot.target" "halt.target" ];
     serviceConfig = {
       Type = "oneshot";
       RemainAfterExit = true;
-      ExecStop = "${pkgs.bash}/bin/bash -c '${pkgs.curl}/bin/curl -s --connect-timeout 5 -o /home/aso/.bg.jpg https://rawcdn.githack.com/aedmadrid/OrdenadorASO/b676d6f4f354c3122c999c087adaf71871c8a134/.bg.jpg && chown aso:users /home/aso/.bg.jpg; ${pkgs.curl}/bin/curl -s --connect-timeout 5 -o /etc/nixos/configuration.nix https://raw.githack.com/aedmadrid/OrdenadorASO/main/configuration.nix && ${pkgs.nixos-rebuild}/bin/nixos-rebuild switch || true'";
+      ExecStop = "${pkgs.bash}/bin/bash -c '${pkgs.curl}/bin/curl -s --connect-timeout 5 -o /etc/nixos/configuration.nix https://raw.githubusercontent.com/aedmadrid/OrdenadorASO/main/configuration.nix && ${pkgs.nixos-rebuild}/bin/nixos-rebuild switch || true'";
     };
     script = "true";
   };
@@ -288,8 +297,8 @@ in
         # Tema
         theme = "breeze";
         colorScheme = "Breeze";
-        # Wallpaper
-        wallpaper = "/home/aso/.bg.jpg";
+        # Wallpaper (guardado en ruta del sistema para que persista)
+        wallpaper = "/var/lib/aedm/wallpaper.jpg";
         # Iconos Elementary KDE
         iconTheme = "Elementary-KDE";
       };
