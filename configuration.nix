@@ -216,7 +216,6 @@ in
         # Guardar temporalmente los directorios/archivos que queremos mantener
         mkdir -p /tmp/aso-backup
         [ -d "$HOME_DIR/Documentos" ] && cp -a "$HOME_DIR/Documentos" /tmp/aso-backup/
-        [ -d "$HOME_DIR/Documents" ] && cp -a "$HOME_DIR/Documents" /tmp/aso-backup/
 
         # Borrar todo en home usando rm -rf
         rm -rf "$HOME_DIR"/* 2>/dev/null || true
@@ -224,11 +223,9 @@ in
 
         # Restaurar los directorios/archivos guardados
         [ -d "/tmp/aso-backup/Documentos" ] && cp -a /tmp/aso-backup/Documentos "$HOME_DIR/"
-        [ -d "/tmp/aso-backup/Documents" ] && cp -a /tmp/aso-backup/Documents "$HOME_DIR/"
 
         # Crear directorios si no existen
         mkdir -p "$HOME_DIR/Documentos"
-        mkdir -p "$HOME_DIR/Documents"
 
         # Ajustar permisos
         chown -R aso:users "$HOME_DIR"
@@ -249,7 +246,7 @@ in
     serviceConfig = {
       Type = "oneshot";
       RemainAfterExit = true;
-      ExecStop = "${pkgs.bash}/bin/bash -c '${pkgs.curl}/bin/curl -s --connect-timeout 5 -o /etc/nixos/configuration.nix https://raw.githubusercontent.com/aedmadrid/OrdenadorASO/main/configuration.nix && ${pkgs.nixos-rebuild}/bin/nixos-rebuild switch || true'";
+      ExecStop = "${pkgs.bash}/bin/bash -c '${pkgs.curl}/bin/curl -sL --connect-timeout 5 -o /etc/nixos/configuration.nix https://raw.githubusercontent.com/aedmadrid/OrdenadorASO/main/configuration.nix && ${pkgs.nixos-rebuild}/bin/nixos-rebuild switch || true'";
     };
     script = "true";
   };
@@ -307,6 +304,53 @@ in
       shortcuts = {
         "kwin"."Window Close" = "Alt+F4";
         "kwin"."Window Fullscreen" = "Meta+F11";
+      };
+
+      # Panel inferior (barra de tareas)
+      panels = [
+        {
+          location = "bottom";
+          height = 44;
+          widgets = [
+            {
+              kickoff = {
+                icon = "nix-d-white";
+                sortAlphabetically = true;
+                favoritesPortedToKAstats = true;
+              };
+            }
+            {
+              iconTasks = {
+                launchers = [
+                  "applications:org.kde.dolphin.desktop"
+                  "applications:browser-guest.desktop"
+                ];
+              };
+            }
+            "org.kde.plasma.marginsseparator"
+            {
+              systemTray = {
+                items = {
+                  shown = [ "org.kde.plasma.volume" "org.kde.plasma.networkmanagement" "org.kde.plasma.battery" ];
+                  hidden = [ "org.kde.plasma.clipboard" ];
+                };
+              };
+            }
+            {
+              digitalClock = {
+                calendar.firstDayOfWeek = "monday";
+                time.format = "24h";
+              };
+            }
+          ];
+        }
+      ];
+
+      # Configurar favoritos del menú de aplicaciones
+      configFile = {
+        "kickoffrc"."Favorites"."favorites" = {
+          value = "preferred://filemanager,applications:browser-guest.desktop";
+        };
       };
     };
 
