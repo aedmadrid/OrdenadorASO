@@ -7,7 +7,7 @@
 let
   # Importar Home Manager y Plasma Manager
   home-manager = builtins.fetchTarball {
-    url = "https://github.com/nix-community/home-manager/archive/master.tar.gz";
+    url = "https://github.com/nix-community/home-manager/archive/release-24.11.tar.gz";
   };
   plasma-manager = builtins.fetchTarball {
     url = "https://github.com/nix-community/plasma-manager/archive/trunk.tar.gz";
@@ -152,6 +152,7 @@ in
     khelpcenter  # Centro de ayuda
     oxygen       # Tema antiguo
     plasma-browser-integration
+    kwrite       # Editor de texto duplicado (usamos Kate)
   ];
 
   environment.systemPackages = with pkgs; [
@@ -268,6 +269,39 @@ in
         categories = [ "System" "FileManager" ];
       };
 
+      # Ark -> Descomprimir
+      "org.kde.ark" = {
+        name = "Descomprimir";
+        comment = "Herramienta de compresión y descompresión";
+        exec = "ark %U";
+        icon = "ark";
+        terminal = false;
+        type = "Application";
+        categories = [ "Utility" "Archiving" ];
+      };
+
+      # Spectacle -> Recortes
+      "org.kde.spectacle" = {
+        name = "Recortes";
+        comment = "Captura de pantalla";
+        exec = "spectacle";
+        icon = "spectacle";
+        terminal = false;
+        type = "Application";
+        categories = [ "Graphics" "Utility" ];
+      };
+
+      # Konsole -> Terminal
+      "org.kde.konsole" = {
+        name = "Terminal";
+        comment = "Emulador de terminal";
+        exec = "konsole";
+        icon = "utilities-terminal";
+        terminal = false;
+        type = "Application";
+        categories = [ "System" "TerminalEmulator" ];
+      };
+
       # ============================================
       # OCULTAR APLICACIONES NO DESEADAS
       # ============================================
@@ -339,6 +373,59 @@ in
         name = "Print Manager";
         exec = "";
         noDisplay = true;
+      };
+
+      # Ocultar Interfaz de impresión (cups)
+      "cups" = {
+        name = "Interfaz de impresión";
+        exec = "";
+        noDisplay = true;
+      };
+
+      # Ocultar kwrite (por si queda algún .desktop)
+      "org.kde.kwrite" = {
+        name = "KWrite";
+        exec = "";
+        noDisplay = true;
+      };
+
+      # Ocultar Visor de procesos que han fallado (coredump gui)
+      "org.kde.drkonqi.coredump.gui" = {
+        name = "Visor de procesos fallados";
+        exec = "";
+        noDisplay = true;
+      };
+
+      # Ocultar Vim
+      "vim" = {
+        name = "Vim";
+        exec = "";
+        noDisplay = true;
+      };
+
+      # Ocultar gvim también
+      "gvim" = {
+        name = "GVim";
+        exec = "";
+        noDisplay = true;
+      };
+
+      # Ocultar KWalletManager (otra variante)
+      "org.kde.kwalletmanager" = {
+        name = "KWalletManager";
+        exec = "";
+        noDisplay = true;
+      };
+
+      # Ocultar Preferencias del Sistema KDE (solo del menú, sigue accesible)
+      "systemsettings" = {
+        name = "Preferencias del sistema";
+        exec = "systemsettings";
+        icon = "systemsettings";
+        noDisplay = true;
+        terminal = false;
+        type = "Application";
+        categories = [ "Settings" ];
       };
     };
   };
