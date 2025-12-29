@@ -163,6 +163,10 @@ in
 
   hardware.bluetooth.enable = true;
 
+  # Desactivar KWallet para evitar popup de llavero
+  security.pam.services.sddm.kwallet.enable = false;
+  security.pam.services.login.kwallet.enable = false;
+
   # Excluir aplicaciones de KDE no deseadas
   environment.plasma6.excludePackages = with pkgs.kdePackages; [
     elisa        # Reproductor de música
@@ -304,6 +308,16 @@ in
       shortcuts = {
         "kwin"."Window Close" = "Alt+F4";
         "kwin"."Window Fullscreen" = "Meta+F11";
+      };
+
+      # Desactivar KWallet
+      configFile = {
+        "kwalletrc"."Wallet"."Enabled" = {
+          value = false;
+        };
+        "kwalletrc"."Wallet"."First Use" = {
+          value = false;
+        };
       };
 
       # Panel inferior (barra de tareas)
