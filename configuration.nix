@@ -1,13 +1,25 @@
 # Edit this configuration file to define what should be installed on
 # your system.  Help is available in the configuration.nix(5) man page
-# and in the NixOS manual (accessible by running ‘nixos-help’).
+# and in the NixOS manual (accessible by running 'nixos-help').
 
-{ config, pkgs, ... }:
+{ config, pkgs, lib, ... }:
 
+let
+  # Importar Home Manager y Plasma Manager
+  home-manager = builtins.fetchTarball {
+    url = "https://github.com/nix-community/home-manager/archive/master.tar.gz";
+  };
+  plasma-manager = builtins.fetchTarball {
+    url = "https://github.com/nix-community/plasma-manager/archive/trunk.tar.gz";
+  };
+in
 {
   imports =
-    [ # Include the results of the hardware scan.
+    [
+      # Include the results of the hardware scan.
       ./hardware-configuration.nix
+      # Home Manager
+      (import "${home-manager}/nixos")
     ];
 
   # Bootloader.
@@ -23,6 +35,34 @@
 
   # Enable networking
   networking.networkmanager.enable = true;
+
+  # Configuración WiFi predeterminada
+  networking.networkmanager.ensureProfiles = {
+    environmentFiles = [ ];
+    profiles = {
+      "ESDMADRID_WIFI" = {
+        connection = {
+          id = "ESDMADRID_WIFI";
+          type = "wifi";
+          autoconnect = true;
+        };
+        wifi = {
+          ssid = "ESDMADRID_WIFI";
+          mode = "infrastructure";
+        };
+        wifi-security = {
+          key-mgmt = "wpa-psk";
+          psk = "ESDMadrid2019";
+        };
+        ipv4 = {
+          method = "auto";
+        };
+        ipv6 = {
+          method = "auto";
+        };
+      };
+    };
+  };
 
   # Set your time zone.
   time.timeZone = "Europe/Madrid";
@@ -78,48 +118,135 @@
     #media-session.enable = true;
   };
 
-
   # Enable touchpad support (enabled default in most desktopManager).
   # services.xserver.libinput.enable = true;
 
-  # Define a user account. Don't forget to set a password with ‘passwd’.
+  # Define a user account sin contraseña
   users.users.aso = {
     isNormalUser = true;
     description = "Asociación de Estudiantes de Diseño de Madrid";
-    password = "aedm";
+    initialPassword = "";
     extraGroups = [ "networkmanager" ];
-    packages = with pkgs; [
-      kdePackages.kate
-    ];
   };
 
+  # Permitir login sin contraseña
+  security.pam.services.sddm.allowNullPassword = true;
+  security.pam.services.login.allowNullPassword = true;
 
   services.displayManager = {
     autoLogin.enable = true;
     autoLogin.user = "aso";
-    };
+  };
 
   # Allow unfree packages
   nixpkgs.config.allowUnfree = true;
+
   # flakes
-  #
   nix.settings.experimental-features = [ "nix-command" "flakes" ];
 
   hardware.bluetooth.enable = true;
 
+  # Excluir aplicaciones de KDE no deseadas
+  environment.plasma6.excludePackages = with pkgs.kdePackages; [
+    elisa        # Reproductor de música
+    khelpcenter  # Centro de ayuda
+    oxygen       # Tema antiguo
+    plasma-browser-integration
+  ];
 
   environment.systemPackages = with pkgs; [
-       maliit-keyboard
-       maliit-framework
-       vim
-       inkscape-with-extensions
-       vlc
-       unixtools.quota
-       zed-editor
-       git
-   ] ++ (if stdenv.hostPlatform.system == "x86_64-linux"
-         then [ google-chrome ]
-         else [ chromium ]);
+    maliit-keyboard
+    maliit-framework
+    vim
+    inkscape-with-extensions
+    vlc
+    unixtools.quota
+    zed-editor
+    git
+    kdePackages.kate
+  ] ++ (if stdenv.hostPlatform.system == "x86_64-linux"
+        then [ google-chrome ]
+        else [ chromium ]);
+
+  # ============================================
+  # HOME MANAGER - Configuración del usuario aso
+  # ============================================
+  home-manager.useGlobalPkgs = true;
+  home-manager.useUserPackages = true;
+
+  home-manager.users.aso = { config, pkgs, lib, ... }: {
+    imports = [
+      (import "${plasma-manager}/modules")
+    ];
+
+    home.stateVersion = "25.11";
+
+    # Configuración de Plasma con plasma-manager
+    programs.plasma = {
+      enable = true;
+
+      # Configuración del workspace
+      workspace = {
+        # Tema
+        theme = "breeze";
+        colorScheme = "Breeze";
+        # Puedes añadir wallpaper aquí
+        # wallpaper = "/path/to/wallpaper.jpg";
+      };
+
+      # Atajos de teclado personalizados
+      shortcuts = {
+        "kwin"."Window Close" = "Alt+F4";
+        "kwin"."Window Fullscreen" = "Meta+F11";
+      };
+    };
+
+    # ============================================
+    # LANZADORES PERSONALIZADOS (.desktop files)
+    # ============================================
+    xdg.desktopEntries = {
+      # Navegador con --guest (Chrome en x86, Chromium en ARM)
+      browser-guest = {
+        name = "Chrome";
+        comment = "Navegar en modo invitado";
+        exec =
+          if pkgs.stdenv.hostPlatform.system == "x86_64-linux"
+          then "google-chrome-stable --guest %U"
+          else "chromium --guest %U";
+        icon =
+          if pkgs.stdenv.hostPlatform.system == "x86_64-linux"
+          then "google-chrome"
+          else "chromium";
+        terminal = false;
+        type = "Application";
+        categories = [ "Network" "WebBrowser" ];
+      };
+
+
+
+      # Ejemplo: Editor de texto
+      editor-aedm = {
+        name = "Editor de Código";
+        comment = "Zed Editor";
+        exec = "zeditor %F";
+        icon = "zed";
+        terminal = false;
+        type = "Application";
+        categories = [ "Development" "TextEditor" ];
+      };
+    };
+
+    # Ocultar lanzadores de apps no deseadas
+    # (Esto crea .desktop files que ocultan las apps del menú)
+    xdg.desktopEntries = {
+      # Ocultar Elisa si no se eliminó completamente
+      "org.kde.elisa" = {
+        name = "Elisa";
+        exec = "";
+        noDisplay = true;
+      };
+    };
+  };
 
   # Some programs need SUID wrappers, can be configured further or are
   # started in user sessions.
@@ -142,7 +269,7 @@
 
   # This value determines the NixOS release from which the default
   # settings for stateful data, like file locations and database versions
-  # on your system were taken. It‘s perfectly fine and recommended to leave
+  # on your system were taken. It's perfectly fine and recommended to leave
   # this value at the release version of the first install of this system.
   # Before changing this value read the documentation for this option
   # (e.g. man configuration.nix or on https://nixos.org/nixos/options.html).
