@@ -16,12 +16,17 @@ let
   elementary-kde-icons = pkgs.stdenv.mkDerivation {
     pname = "elementary-kde-icons";
     version = "1.0";
-    src = builtins.fetchTarball {
-      url = "https://github.com/zayronxio/Elementary-KDE-Icons/archive/refs/heads/master.tar.gz";
+    src = builtins.fetchGit {
+      url = "https://github.com/zayronxio/Elementary-KDE-Icons.git";
+      ref = "master";
     };
+    # Desactivar check de symlinks rotos
+    dontCheckForBrokenSymlinks = true;
     installPhase = ''
-      mkdir -p $out/share/icons
-      cp -r . $out/share/icons/Elementary-KDE
+      mkdir -p $out/share/icons/Elementary-KDE
+      cp -rL --no-preserve=mode . $out/share/icons/Elementary-KDE || true
+      # Eliminar symlinks rotos
+      find $out/share/icons/Elementary-KDE -xtype l -delete || true
     '';
   };
 in
