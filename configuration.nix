@@ -206,43 +206,43 @@ in
       RemainAfterExit = true;
     };
     script = ''
-      HOME_DIR="/home/aso"
-      WALLPAPER_URL="https://raw.githubusercontent.com/aedmadrid/OrdenadorASO/main/.bg.jpg"
-      WALLPAPER_PATH="/var/lib/aedm/wallpaper.jpg"
+HOME_DIR="/home/aso"
+WALLPAPER_URL="https://raw.githubusercontent.com/aedmadrid/OrdenadorASO/main/.bg.jpg"
+WALLPAPER_PATH="/var/lib/aedm/wallpaper.jpg"
 
-      # Crear directorio para wallpaper del sistema
-      mkdir -p /var/lib/aedm
+# Crear directorio para wallpaper del sistema
+mkdir -p /var/lib/aedm
 
-      # Descargar wallpaper si hay internet
-      curl -s --connect-timeout 10 -o "$WALLPAPER_PATH" "$WALLPAPER_URL" || true
+# Descargar wallpaper si hay internet
+curl -s --connect-timeout 10 -o "$WALLPAPER_PATH" "$WALLPAPER_URL" || true
 
-      if [ -d "$HOME_DIR" ]; then
-        # Crear backup temporal seguro
-        TMP_BACKUP="$(mktemp -d /tmp/aso-backup.XXXXXX)"
+if [ -d "$HOME_DIR" ]; then
+  # Crear backup temporal seguro
+  TMP_BACKUP="$(mktemp -d /tmp/aso-backup.XXXXXX)"
 
-        # Preservar "Documentos" si existe
-        if [ -d "$HOME_DIR/Documentos" ]; then
-          cp -a "$HOME_DIR/Documentos" "$TMP_BACKUP/"
-        fi
+  # Preservar "Documentos" si existe
+  if [ -d "$HOME_DIR/Documentos" ]; then
+    cp -a "$HOME_DIR/Documentos" "$TMP_BACKUP/"
+  fi
 
-        # Eliminar todo en home excepto los elementos preservados (evita problemas con globs)
-        find "$HOME_DIR" -mindepth 1 -maxdepth 1 ! -name 'Documentos' -exec rm -rf -- {} +
+  # Eliminar todo en home excepto los elementos preservados (evita problemas con globs)
+  find "$HOME_DIR" -mindepth 1 -maxdepth 1 ! -name 'Documentos' -exec rm -rf -- {} +
 
-        # Asegurar que Documentos exista y restaurarla desde el backup si procede
-        mkdir -p "$HOME_DIR/Documentos"
-        if [ -d "$TMP_BACKUP/Documentos" ]; then
-          cp -a "$TMP_BACKUP/Documentos" "$HOME_DIR/"
-        fi
+  # Asegurar que Documentos exista y restaurarla desde el backup si procede
+  mkdir -p "$HOME_DIR/Documentos"
+  if [ -d "$TMP_BACKUP/Documentos" ]; then
+    cp -a "$TMP_BACKUP/Documentos" "$HOME_DIR/"
+  fi
 
-        # Ajustar permisos (no fallar el script si falla chown)
-        chown -R aso:users "$HOME_DIR" || true
+  # Ajustar permisos (no fallar el script si falla chown)
+  chown -R aso:users "$HOME_DIR" || true
 
-        # Limpiar backup temporal
-        rm -rf -- "$TMP_BACKUP"
-      fi
+  # Limpiar backup temporal
+  rm -rf -- "$TMP_BACKUP"
+fi
 
-      exit 0
-    '';
+exit 0
+'';
   };
 
   # ============================================
