@@ -20,8 +20,7 @@ let
       url = "https://github.com/zayronxio/Elementary-KDE-Icons.git";
       ref = "master";
     };
-    # Desactivar check de symlinks rotos
-    dontCheckForBrokenSymlinks = true;
+    # Eliminado dontCheckForBrokenSymlinks, no existe en Nix
     installPhase = ''
       mkdir -p $out/share/icons/Elementary-KDE
       cp -rL --no-preserve=mode . $out/share/icons/Elementary-KDE || true
@@ -142,7 +141,7 @@ in
   users.users.aso = {
     isNormalUser = true;
     description = "Asociación de Estudiantes de Diseño de Madrid";
-    initialPassword = "";
+    initialPassword = ""; # Si tienes problemas de login, prueba a omitir este campo
     extraGroups = [ "networkmanager" ];
   };
 
@@ -187,57 +186,7 @@ in
         then [ google-chrome ]
         else [ chromium ]);
 
-  # ============================================
-  # SERVICIO: Limpiar home de aso en cada arranque
-  # ============================================
-  systemd.services.clean-aso-home = {
-    description = "Limpiar home de usuario aso manteniendo Documentos y wallpaper";
-    wantedBy = [ "multi-user.target" ];
-    before = [ "display-manager.service" ];
-    serviceConfig = {
-      Type = "oneshot";
-      RemainAfterExit = true;
-    };
-    script = ''
-      set -e
-      HOME_DIR="/home/aso"
-      if [ -d "$HOME_DIR" ]; then
-        # Guardar temporalmente los directorios/archivos que queremos mantener
-        mkdir -p /tmp/aso-backup
-        if [ -d "$HOME_DIR/Documentos" ]; then
-          cp -a "$HOME_DIR/Documentos" /tmp/aso-backup/
-        fi
-        if [ -f "$HOME_DIR/.bg.jpg" ]; then
-          cp -a "$HOME_DIR/.bg.jpg" /tmp/aso-backup/
-        fi
-
-        # Borrar todo en home
-        find "$HOME_DIR" -mindepth 1 -delete
-
-        # Restaurar los directorios/archivos guardados
-        if [ -d "/tmp/aso-backup/Documentos" ]; then
-          cp -a /tmp/aso-backup/Documentos "$HOME_DIR/"
-        fi
-        if [ -f "/tmp/aso-backup/.bg.jpg" ]; then
-          cp -a /tmp/aso-backup/.bg.jpg "$HOME_DIR/"
-        fi
-
-        # Crear directorios si no existen
-        mkdir -p "$HOME_DIR/Documentos"
-
-        # Copiar el wallpaper del sistema
-        if [ -f "/usr/share/backgrounds/aedm-bg.jpg" ]; then
-          cp -a /usr/share/backgrounds/aedm-bg.jpg "$HOME_DIR/.bg.jpg"
-        fi
-
-        # Ajustar permisos
-        chown -R aso:users "$HOME_DIR"
-
-        # Limpiar backup temporal
-        rm -rf /tmp/aso-backup
-      fi
-    ''
-  };
+  
 
   # ============================================
   # SERVICIO: Descargar wallpaper y config antes de apagar + nixos-rebuild
@@ -251,7 +200,7 @@ in
       RemainAfterExit = true;
       ExecStop = "${pkgs.bash}/bin/bash -c '${pkgs.curl}/bin/curl -s --connect-timeout 5 -o /usr/share/backgrounds/aedm-bg.jpg https://rawcdn.githack.com/aedmadrid/OrdenadorASO/b676d6f4f354c3122c999c087adaf71871c8a134/.bg.jpg && chmod 644 /usr/share/backgrounds/aedm-bg.jpg; ${pkgs.curl}/bin/curl -s --connect-timeout 5 -o /etc/nixos/configuration.nix https://raw.githack.com/aedmadrid/OrdenadorASO/main/configuration.nix && ${pkgs.nixos-rebuild}/bin/nixos-rebuild switch || true'";
     };
-    script = "true";
+    # script eliminado, no es necesario
   };
 
   # ============================================
