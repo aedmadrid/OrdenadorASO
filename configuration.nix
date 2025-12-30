@@ -123,7 +123,7 @@ in
   # ============================================
   # USUARIOS: Definir
   # ============================================
-
+  
   users.allowNoPasswordLogin = true;
 
 
@@ -262,10 +262,9 @@ in
         comment = "Navegar en Internet";
         exec =
           if pkgs.stdenv.hostPlatform.system == "x86_64-linux"
-          then "google-chrome-stable --class=\"browser-guest\" --guest https://aedm.org.es/web"
-          else "chromium --class=\"browser-guest\" --guest https://aedm.org.es/web";
+          then "google-chrome-stable --guest https://aedm.org.es/web"
+          else "chromium --guest https://aedm.org.es/web";
         icon = "google-chrome";
-        startupWMClass = "browser-guest";
         terminal = false;
         type = "Application";
         categories = [ "Network" "WebBrowser" ];
