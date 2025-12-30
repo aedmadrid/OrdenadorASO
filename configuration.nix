@@ -133,7 +133,6 @@ in
     password = null;
     uid = 1000;
     home = "/home/aso";
-    mutable = false;
     extraGroups = [ "networkmanager" ];
   };
 
