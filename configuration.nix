@@ -132,7 +132,6 @@ in
     description = "Asociación de Estudiantes de Diseño de Madrid";
     password = null;
     uid = 1000;
-    gid = 1000;
     home = "/home/aso";
     mutable = false;
     extraGroups = [ "networkmanager" ];
