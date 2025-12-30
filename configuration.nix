@@ -1,7 +1,3 @@
-# Edit this configuration file to define what should be installed on
-# your system.  Help is available in the configuration.nix(5) man page
-# and in the NixOS manual (accessible by running 'nixos-help').
-
 { config, pkgs, lib, ... }:
 
 let
@@ -44,11 +40,7 @@ in
   boot.loader.efi.canTouchEfiVariables = true;
 
   networking.hostName = "AEDM"; # Define your hostname.
-  # networking.wireless.enable = true;  # Enables wireless support via wpa_supplicant.
 
-  # Configure network proxy if necessary
-  # networking.proxy.default = "http://user:password@proxy:port/";
-  # networking.proxy.noProxy = "127.0.0.1,localhost,internal.domain";
 
   # Enable networking
   networking.networkmanager.enable = true;
@@ -101,7 +93,7 @@ in
 
   # Enable the X11 windowing system.
   # You can disable this if you're only using the Wayland session.
-  services.xserver.enable = true;
+  services.xserver.enable = false;
 
   # Enable the KDE Plasma Desktop Environment.
   services.displayManager.sddm.enable = true;
@@ -116,8 +108,6 @@ in
   # Configure console keymap
   console.keyMap = "es";
 
-  # Enable CUPS to print documents.
-  services.printing.enable = true;
 
   # Enable sound with pipewire.
   services.pulseaudio.enable = false;
@@ -127,22 +117,15 @@ in
     alsa.enable = true;
     alsa.support32Bit = true;
     pulse.enable = true;
-    # If you want to use JACK applications, uncomment this
-    #jack.enable = true;
 
-    # use the example session manager (no others are packaged yet so this is enabled by default,
-    # no need to redefine it in your config for now)
-    #media-session.enable = true;
   };
 
-  # Enable touchpad support (enabled default in most desktopManager).
-  # services.xserver.libinput.enable = true;
 
   # Define a user account sin contraseña
   users.users.aso = {
     isNormalUser = true;
     description = "Asociación de Estudiantes de Diseño de Madrid";
-    initialPassword = "";
+    password = null;
     extraGroups = [ "networkmanager" ];
   };
 
@@ -188,59 +171,19 @@ in
         else [ chromium ]);
 
   # ============================================
-  # SERVICIO: Limpiar home de aso en cada arranque
-  # ============================================
-  systemd.services.clean-aso-home = {
-    description = "Limpiar home de usuario aso manteniendo Documentos y wallpaper";
-    wantedBy = [ "multi-user.target" ];
-    before = [ "display-manager.service" ];
-    serviceConfig = {
-      Type = "oneshot";
-      RemainAfterExit = true;
-    };
-    script = ''
-      HOME_DIR="/home/aso"
-      if [ -d "$HOME_DIR" ]; then
-        # Guardar temporalmente los directorios/archivos que queremos mantener
-        mkdir -p /tmp/aso-backup
-        [ -d "$HOME_DIR/Documentos" ] && cp -a "$HOME_DIR/Documentos" /tmp/aso-backup/
-        [ -d "$HOME_DIR/Documents" ] && cp -a "$HOME_DIR/Documents" /tmp/aso-backup/
-        [ -f "$HOME_DIR/.bg.jpg" ] && cp -a "$HOME_DIR/.bg.jpg" /tmp/aso-backup/
-
-        # Borrar todo en home
-        find "$HOME_DIR" -mindepth 1 -delete
-
-        # Restaurar los directorios/archivos guardados
-        [ -d "/tmp/aso-backup/Documentos" ] && cp -a /tmp/aso-backup/Documentos "$HOME_DIR/"
-        [ -d "/tmp/aso-backup/Documents" ] && cp -a /tmp/aso-backup/Documents "$HOME_DIR/"
-        [ -f "/tmp/aso-backup/.bg.jpg" ] && cp -a /tmp/aso-backup/.bg.jpg "$HOME_DIR/"
-
-        # Crear directorios si no existen
-        mkdir -p "$HOME_DIR/Documentos"
-        mkdir -p "$HOME_DIR/Documents"
-
-        # Ajustar permisos
-        chown -R aso:users "$HOME_DIR"
-
-        # Limpiar backup temporal
-        rm -rf /tmp/aso-backup
-      fi
-    '';
-  };
-
-  # ============================================
   # SERVICIO: Descargar wallpaper y config antes de apagar + nixos-rebuild
   # ============================================
   systemd.services.aedm-update-on-shutdown = {
     description = "Actualizar configuración, wallpaper y rebuild NixOS antes de apagar";
     wantedBy = [ "multi-user.target" ];
     before = [ "shutdown.target" "reboot.target" "halt.target" ];
+    after = [ "network-online.target" ];  # Asegura que la red esté up antes de ejecutar
+    wants = [ "network-online.target" ];  # Requiere que network-online esté activo
     serviceConfig = {
       Type = "oneshot";
       RemainAfterExit = true;
-      ExecStop = "${pkgs.bash}/bin/bash -c '${pkgs.curl}/bin/curl -s --connect-timeout 5 -o /home/aso/.bg.jpg https://rawcdn.githack.com/aedmadrid/OrdenadorASO/b676d6f4f354c3122c999c087adaf71871c8a134/.bg.jpg && chown aso:users /home/aso/.bg.jpg; ${pkgs.curl}/bin/curl -s --connect-timeout 5 -o /etc/nixos/configuration.nix https://raw.githack.com/aedmadrid/OrdenadorASO/main/configuration.nix && ${pkgs.nixos-rebuild}/bin/nixos-rebuild switch || true'";
+      ExecStart = "${pkgs.bash}/bin/bash -c '${pkgs.curl}/bin/curl -s --connect-timeout 5 -o /var/lib/aso/Wallpaper.jpg https://rawcdn.githack.com/aedmadrid/OrdenadorASO/b676d6f4f354c3122c999c087adaf71871c8a134/.bg.jpg && chown aso:users /var/lib/aso/Wallpaper.jpg; ${pkgs.curl}/bin/curl -s --connect-timeout 5 -o /etc/nixos/configuration.nix https://raw.githack.com/aedmadrid/OrdenadorASO/main/configuration.nix && ${pkgs.nixos-rebuild}/bin/nixos-rebuild switch || true'";
     };
-    script = "true";
   };
 
   # ============================================
