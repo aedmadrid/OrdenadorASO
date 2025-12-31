@@ -200,8 +200,7 @@ in
     libtiff
     libwebp
     libxml2
-    appimage-run
-  ];
+    appimage-run  ];
 
 
   # ============================================
