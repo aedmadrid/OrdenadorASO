@@ -201,6 +201,40 @@ in
   programs.nix-ld.libraries = with pkgs; [
     # Add any missing dynamic libraries for unpackaged programs
     # here, NOT in environment.systemPackages
+    # Libraries for Electron/Chromium apps
+    glib
+    gtk3
+    nss
+    nspr
+    atk
+    cairo
+    pango
+    gdk-pixbuf
+    xorg.libX11
+    xorg.libXcomposite
+    xorg.libXdamage
+    xorg.libXext
+    xorg.libXfixes
+    xorg.libXrandr
+    xorg.libxcb
+    libdrm
+    mesa
+    alsa-lib
+    pulseaudio
+    cups
+    dbus
+    expat
+    freetype
+    fontconfig
+    libjpeg
+    libpng
+    libtiff
+    libwebp
+    libxml2
+    sqlite
+    zlib
+    openssl
+    chromium
   ];
 
 
