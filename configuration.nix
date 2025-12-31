@@ -204,6 +204,8 @@ in
     # Libraries for Electron/Chromium apps
     glib
     gtk3
+    libuuid
+    libnotify
     nss
     nspr
     atk
