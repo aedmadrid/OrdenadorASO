@@ -218,6 +218,7 @@ in
     xorg.libXrandr
     xorg.libxcb
     libdrm
+    libxkbcommon
     mesa
     libgbm
     alsa-lib
@@ -235,7 +236,7 @@ in
     sqlite
     zlib
     openssl
-    chromium
+
   ];
 
 
