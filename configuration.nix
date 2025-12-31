@@ -219,6 +219,7 @@ in
     xorg.libxcb
     libdrm
     mesa
+    libgbm
     alsa-lib
     pulseaudio
     cups
