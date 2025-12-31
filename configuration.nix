@@ -175,6 +175,7 @@ in
     kdePackages.kate
     curl
     elementary-kde-icons
+    appimage-run
   ] ++ (if stdenv.hostPlatform.system == "x86_64-linux"
         then [ google-chrome ]
         else [ chromium ]);
@@ -200,7 +201,8 @@ in
     libtiff
     libwebp
     libxml2
-    appimage-run  ];
+    appimage-run
+  ];
 
 
   # ============================================
