@@ -2,11 +2,61 @@
 <html>
   <head>
     <meta charset="UTF-8" />
+    <meta
+      http-equiv="Content-Security-Policy"
+      content="default-src 'self'; script-src 'self' 'unsafe-inline'; style-src 'self' 'unsafe-inline';"
+    />
     <title>Portal.APP</title>
     <link rel="stylesheet" href="index.css" />
   </head>
   <body>
     <h1>Portal.APP</h1>
     <p>Ejecuta apps sin instalarlas.</p>
+
+    <input type="text" id="search-input" placeholder="Buscar app..." />
+
+    <div id="app-list"></div>
+
+    <script>
+      let allApps = [];
+
+      window.electronAPI.receiveApps((event, apps) => {
+        allApps = apps;
+        displayApps(apps);
+      });
+
+      function displayApps(apps) {
+        const appList = document.getElementById("app-list");
+        appList.innerHTML = "";
+        apps.forEach((app) => {
+          const appDiv = document.createElement("div");
+          appDiv.className = "app-item";
+          appDiv.innerHTML = `
+            <img src="${app.icono}" alt="${app.nombre}" width="50" height="50">
+            <div>
+              <h3>${app.nombre}</h3>
+              <p>${app.descripcion}</p>
+            </div>
+            <button onclick="openApp('${app.catalogoID}')">Abrir</button>
+          `;
+          appList.appendChild(appDiv);
+        });
+      }
+
+      function openApp(catalogoID) {
+        window.electronAPI.openApp(catalogoID);
+      }
+
+      const searchInput = document.getElementById("search-input");
+      searchInput.addEventListener("input", () => {
+        const query = searchInput.value.toLowerCase();
+        const filtered = allApps.filter(
+          (app) =>
+            app.nombre.toLowerCase().includes(query) ||
+            app.descripcion.toLowerCase().includes(query),
+        );
+        displayApps(filtered);
+      });
+    </script>
   </body>
 </html>
