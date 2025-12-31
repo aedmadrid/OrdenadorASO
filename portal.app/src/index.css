@@ -1,14 +1,162 @@
+@font-face {
+  font-family: P-Kiko;
+  src: url("https://aedm.org.es/fonts/PKiko-Regular.otf") format("opentype");
+  font-style: normal;
+  font-weight: normal;
+}
+
+@font-face {
+  font-family: P-Kiko;
+  src: url("https://aedm.org.es/fonts/PKiko-Light.otf") format("opentype");
+  font-style: normal;
+}
+
+@font-face {
+  font-family: P-Kiko;
+  src: url("https://aedm.org.es/fonts/PKiko-RegularItalic.otf")
+    format("opentype");
+  font-style: italic;
+  font-weight: normal;
+}
+
+@font-face {
+  font-family: P-Kiko;
+  src: url("https://aedm.org.es/fonts/PKiko-LightItalic.otf") format("opentype");
+  font-style: italic;
+}
+
+@font-face {
+  font-family: DMMon;
+  src: url("https://aedm.org.es/fonts/DMMono-Regular.ttf") format("truetype");
+  font-style: normal;
+  font-weight: normal;
+}
+
+@font-face {
+  font-family: DMMono;
+  src: url("https://aedm.org.es/fonts/DMMono-Italic.ttf") format("truetype");
+  font-style: italic;
+  font-weight: normal;
+}
+
+@font-face {
+  font-family: DMMono;
+  src: url("https://aedm.org.es/fonts/DMMono-Medium.ttf") format("truetype");
+  font-style: normal;
+}
+
+@font-face {
+  font-family: DMMono;
+  src: url("https://aedm.org.es/fonts/DMMono-MediumItalic.ttf")
+    format("truetype");
+  font-style: italic;
+}
+
+@font-face {
+  font-family: DMMono;
+  src: url("https://aedm.org.es/fonts/DMMono-Light.ttf") format("truetype");
+  font-style: normal;
+}
+
+@font-face {
+  font-family: NeueMontreal;
+  src: url("https://aedm.org.es/fonts/NeueMontreal-Regular.ttf")
+    format("truetype");
+  font-style: normal;
+  font-weight: 400;
+}
+
+@font-face {
+  font-family: NeueMontreal;
+  src: url("https://aedm.org.es/fonts/NeueMontreal-Italic.ttf")
+    format("truetype");
+  font-style: italic;
+  font-weight: 400;
+}
+
+@font-face {
+  font-family: NeueMontreal;
+  src: url("https://aedm.org.es/fonts/NeueMontreal-Bold.ttf") format("truetype");
+  font-style: normal;
+  font-weight: 700;
+}
+
+@font-face {
+  font-family: NeueMontreal;
+  src: url("https://aedm.org.es/fonts/NeueMontreal-BoldItalic.ttf")
+    format("truetype");
+  font-style: italic;
+  font-weight: 700;
+}
+
+@font-face {
+  font-family: NeueMontreal;
+  src: url("https://aedm.org.es/fonts/NeueMontreal-Light.ttf")
+    format("truetype");
+  font-style: normal;
+  font-weight: 300;
+}
+
+@font-face {
+  font-family: NeueMontreal;
+  src: url("https://aedm.org.es/fonts/NeueMontreal-LightItalic.ttf")
+    format("truetype");
+  font-style: italic;
+  font-weight: 300;
+}
+
+* {
+  overflow-x: hidden;
+}
+html {
+  font-family: NeueMontreal, sans-serif;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+}
+
 body {
-  font-family: Arial, sans-serif;
+  font-family: NeueMontreal, sans-serif;
   margin: 20px;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  max-width: 650px;
+  width: auto;
+  background-color: #fdfdfd;
+  align-items: center;
+  overflow-x: hidden;
+}
+
+h1 {
+  font-size: 100px;
+  font-weight: 100;
+  margin-bottom: 20px;
+  font-family: "P-Kiko", serif;
 }
 
 #search-input {
-  width: 100%;
+  width: calc(100% - 20px);
   padding: 10px;
+  margin-left: 10px;
+  margin-right: 10px;
   font-size: 16px;
   margin-bottom: 20px;
   box-sizing: border-box;
+  border: 1px solid #36e452;
+  border-radius: 0px;
+  background-color: #fdfdfd;
+  transition: all 0.01s ease;
+  position: sticky;
+  top: 0;
+  z-index: 1;
+}
+
+#search-input:focus {
+  outline: none;
+  border: 2px solid;
+  border-color: #1ccd38;
+  transition: all 0.01s ease;
 }
 
 .app-item {
@@ -16,9 +164,17 @@ body {
   align-items: center;
   margin-bottom: 15px;
   padding: 10px;
-  border: 1px solid #ddd;
-  border-radius: 5px;
-  background-color: #f9f9f9;
+  background-color: #36e452;
+  width: calc(100% - 40px);
+  h3 {
+    font-size: 18px;
+    font-weight: 500;
+  }
+  p {
+    font-size: 14px;
+    font-weight: 400;
+  }
+  overflow-x: hidden;
 }
 
 .app-item img {
@@ -37,14 +193,37 @@ body {
 
 .app-item button {
   margin-left: auto;
-  padding: 5px 10px;
-  background-color: #007bff;
-  color: white;
+  padding: 20px 10px;
+  background-color: #36e452;
+  color: black;
   border: none;
-  border-radius: 3px;
+  border-radius: 0px;
   cursor: pointer;
+  transition: background-color 0.3s ease;
+  overflow-x: hidden;
 }
 
 .app-item button:hover {
-  background-color: #0056b3;
+  background-color: #1ccd38;
+  transition: background-color 0.3s ease;
+}
+
+#app-list {
+  margin: 0;
+  padding: 0;
+  width: 100%;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+}
+
+@media (min-width: 550px) {
+  body {
+    min-width: auto;
+    width: 100vw;
+    align-items: center;
+    min-height: 100vh;
+    justify-content: center;
+    overflow-x: hidden;
+  }
 }

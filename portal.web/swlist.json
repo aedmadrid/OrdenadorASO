@@ -3,7 +3,7 @@
     "nombre": "Blender",
     "descripcion": "Software de modelado 3D gratuito y de código abierto",
     "catalogoID": "blender",
-    "icono": "https://upload.wikimedia.org/wikipedia/commons/thumb/0/0c/Blender_logo_no_text.svg/960px-Blender_logo_no_text.svg.png"
+    "icono": "https://beatrixyu.com/wp-content/uploads/2024/02/blender-logo-square.png"
   },
   {
     "nombre": "Adobe Photoshop",
@@ -15,7 +15,7 @@
     "nombre": "Adobe Illustrator",
     "descripcion": "Software de diseño gráfico vectorial profesional",
     "catalogoID": "illustrator",
-    "icono": "https://upload.wikimedia.org/wikipedia/commons/thumb/8/8e/Adobe_Illustrator_CC_icon.svg/960px-Adobe_Illustrator_CC_icon.svg.png"
+    "icono": "https://upload.wikimedia.org/wikipedia/commons/thumb/f/fb/Adobe_Illustrator_CC_icon.svg/2048px-Adobe_Illustrator_CC_icon.svg.png"
   },
   {
     "nombre": "Adobe Lightroom",
@@ -57,7 +57,7 @@
     "nombre": "PaintJS",
     "descripcion": "Editor de imágenes en línea",
     "catalogoID": "paintjs",
-    "icono": "https://upload.wikimedia.org/wikipedia/commons/thumb/0/0d/PaintJS_Logo.svg/960px-PaintJS_Logo.svg.png"
+    "icono": "https://static.wikia.nocookie.net/mecu/images/4/42/MSPaint.png/"
   },
   {
     "nombre": "Arduino IDE",

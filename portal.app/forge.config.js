@@ -4,10 +4,7 @@ const { FuseV1Options, FuseVersion } = require("@electron/fuses");
 module.exports = {
   packagerConfig: {
     asar: true,
-    icon: {
-      darwin: "portal.icns",
-      linux: "src/portal.png",
-    },
+    icon: "icons/portal",
   },
   rebuildConfig: {},
   makers: [
@@ -20,8 +17,9 @@ module.exports = {
       platforms: ["darwin"],
     },
     {
-      name: "@electron-forge/maker-deb",
+      name: "electron-forge-maker-appimage",
       platforms: ["linux"],
+      config: {},
     },
   ],
   plugins: [

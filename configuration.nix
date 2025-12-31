@@ -178,32 +178,11 @@ in
         else [ chromium ]);
 
   # ============================================
-  # SERVICIO: Descargar wallpaper y config antes de apagar + nixos-rebuild
-  # ============================================
-  systemd.services.aedm-update-on-shutdown = {
-    description = "Actualizar configuración, wallpaper y rebuild NixOS antes de apagar";
-    wantedBy = [ "multi-user.target" ];
-    before = [ "shutdown.target" "reboot.target" "halt.target" ];
-    after = [ "network-online.target" ];  # Asegura que la red esté up antes de ejecutar
-    wants = [ "network-online.target" ];  # Requiere que network-online esté activo
-    serviceConfig = {
-      Type = "oneshot";
-      RemainAfterExit = true;
-      ExecStart = "${pkgs.bash}/bin/bash -c '${pkgs.curl}/bin/curl -s --connect-timeout 5 -o /var/lib/aso/Wallpaper.jpg https://rawcdn.githack.com/aedmadrid/OrdenadorASO/b676d6f4f354c3122c999c087adaf71871c8a134/.bg.jpg && chown aso:users /var/lib/aso/Wallpaper.jpg; ${pkgs.curl}/bin/curl -s --connect-timeout 5 -o /etc/nixos/configuration.nix https://raw.githack.com/aedmadrid/OrdenadorASO/main/configuration.nix && ${pkgs.nixos-rebuild}/bin/nixos-rebuild switch || true'";
-    };
-  };
-
-  # ============================================
   # Bibliotecas dinámicas para programas no empaquetados
   # ============================================
 
   programs.nix-ld.enable = true;
   programs.nix-ld.libraries = with pkgs; [
-    # Add any missing dynamic libraries for unpackaged programs
-    # here, NOT in environment.systemPackages
-    # Libraries for Electron/Chromium apps
-    glib
-    gtk3
     libuuid
     libnotify
     nss
@@ -212,33 +191,13 @@ in
     cairo
     pango
     gdk-pixbuf
-    xorg.libX11
-    xorg.libXcomposite
-    xorg.libXdamage
-    xorg.libXext
-    xorg.libXfixes
-    xorg.libXrandr
-    xorg.libxcb
     libdrm
     libxkbcommon
-    mesa
-    libgbm
-    alsa-lib
-    pulseaudio
-    cups
-    dbus
-    expat
-    freetype
-    fontconfig
     libjpeg
     libpng
     libtiff
     libwebp
     libxml2
-    sqlite
-    zlib
-    openssl
-
   ];
 
 
