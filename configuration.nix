@@ -31,6 +31,8 @@ in
     [
       # Include the results of the hardware scan.
       ./hardware-configuration.nix
+      # Configuración de sistemas de archivos
+      #./fsconf.nix
       # Home Manager
       (import "${home-manager}/nixos")
     ];
@@ -198,6 +200,7 @@ in
     libtiff
     libwebp
     libxml2
+    appimage-run
   ];
 
 
