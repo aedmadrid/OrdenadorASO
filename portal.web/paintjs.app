@@ -1,1 +1,0 @@
-portal.app --webAPP -n "PaintJS" -i "https://static.wikia.nocookie.net/mecu/images/4/42/MSPaint.png/" -u "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/143.0.0.0 Safari/537.36" "https://paint.js.org"
