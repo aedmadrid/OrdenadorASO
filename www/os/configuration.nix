@@ -220,6 +220,7 @@ in
   environment.systemPackages = with pkgs; [
     curl
     chromium
+    pkgs.notion-app
     vim  # Para editar logs si es necesario
   ];
 
