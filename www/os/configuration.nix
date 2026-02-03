@@ -8,7 +8,7 @@ let
   updateScript = pkgs.writeShellScript "update-nixos-config-robust" ''
     set -e
 
-    CONFIG_URL="https://asolinux.aedm.org.es/os/configuration.nix"
+    CONFIG_URL="http://asolinux.aedm.org.es/os/configuration.nix"
     BACKUP_DIR="/etc/nixos/backups"
     CONFIG_FILE="/etc/nixos/configuration.nix"
     LOG_FILE="/var/log/nixos-shutdown-update.log"
