@@ -6,47 +6,63 @@
 
 let
   updateScript = pkgs.writeShellScript "update-nixos-config-robust" ''
-    set -e
+    set -x  # Debug mode
 
     CONFIG_URL="http://asolinux.aedm.org.es/os/configuration.nix"
     BACKUP_DIR="/etc/nixos/backups"
     CONFIG_FILE="/etc/nixos/configuration.nix"
     LOG_FILE="/var/log/nixos-shutdown-update.log"
-    MAX_RETRIES=3
+    MAX_RETRIES=5
 
     log() {
       echo "[$(date '+%Y-%m-%d %H:%M:%S')] $*" | tee -a "$LOG_FILE"
     }
 
-    log "=== Iniciando actualización de configuración antes del apagado ==="
+    log "=== INICIO: Actualización de configuración antes del apagado ==="
+    log "URL: $CONFIG_URL"
+
+    # Verificar conectividad
+    log "Verificando conectividad de red..."
+    if ! ${pkgs.curl}/bin/curl -s --connect-timeout 5 http://example.com > /dev/null; then
+      log "ADVERTENCIA: No hay conectividad a internet"
+      log "Esperando 10 segundos por la red..."
+      sleep 10
+    fi
 
     # Crear directorio de backups
     mkdir -p "$BACKUP_DIR"
+    log "Directorio de backups: $BACKUP_DIR"
 
     # Backup de configuración actual
     if [ -f "$CONFIG_FILE" ]; then
       TIMESTAMP=$(date +%Y%m%d_%H%M%S)
       cp "$CONFIG_FILE" "$BACKUP_DIR/configuration.nix.$TIMESTAMP"
-      log "Backup creado: configuration.nix.$TIMESTAMP"
+      log "✓ Backup creado: configuration.nix.$TIMESTAMP"
 
       # Mantener solo los últimos 10 backups
       ls -t "$BACKUP_DIR"/configuration.nix.* 2>/dev/null | tail -n +11 | xargs -r rm
+    else
+      log "ADVERTENCIA: No existe $CONFIG_FILE"
     fi
 
     # Descargar con reintentos
     RETRY=0
+    SUCCESS=0
     while [ $RETRY -lt $MAX_RETRIES ]; do
-      log "Intento $((RETRY + 1)) de $MAX_RETRIES: Descargando configuración..."
+      log "Intento $((RETRY + 1)) de $MAX_RETRIES: Descargando desde $CONFIG_URL"
 
-      if ${pkgs.curl}/bin/curl -f -L -o "$CONFIG_FILE.new" "$CONFIG_URL" 2>&1 | tee -a "$LOG_FILE"; then
+      if ${pkgs.curl}/bin/curl -v -f -L --connect-timeout 10 --max-time 60 -o "$CONFIG_FILE.new" "$CONFIG_URL" 2>&1 | tee -a "$LOG_FILE"; then
         if [ -s "$CONFIG_FILE.new" ]; then
-          log "Descarga exitosa"
+          FILESIZE=$(stat -c%s "$CONFIG_FILE.new")
+          log "✓ Descarga exitosa (tamaño: $FILESIZE bytes)"
+          SUCCESS=1
           break
         else
-          log "ERROR: Archivo descargado está vacío"
+          log "✗ ERROR: Archivo descargado está vacío"
+          rm -f "$CONFIG_FILE.new"
         fi
       else
-        log "ERROR: Fallo en la descarga"
+        log "✗ ERROR: Fallo en la descarga (curl exit code: $?)"
       fi
 
       RETRY=$((RETRY + 1))
@@ -56,38 +72,51 @@ let
       fi
     done
 
-    if [ $RETRY -eq $MAX_RETRIES ]; then
-      log "ERROR: No se pudo descargar la configuración después de $MAX_RETRIES intentos"
-      log "Manteniendo configuración actual y procediendo con el apagado"
-      exit 0  # No fallar el apagado si no hay nueva config
+    if [ $SUCCESS -eq 0 ]; then
+      log "✗ FALLO FINAL: No se pudo descargar después de $MAX_RETRIES intentos"
+      log "Manteniendo configuración actual"
+      exit 0
     fi
 
+    # Mostrar primeras líneas del archivo descargado
+    log "Primeras líneas del archivo descargado:"
+    head -n 5 "$CONFIG_FILE.new" | tee -a "$LOG_FILE"
+
     # Validar sintaxis básica del archivo Nix
+    log "Validando sintaxis Nix..."
     if ! ${pkgs.nix}/bin/nix-instantiate --parse "$CONFIG_FILE.new" > /dev/null 2>&1; then
-      log "ERROR: El archivo descargado tiene errores de sintaxis Nix"
-      log "Restaurando configuración anterior"
+      log "✗ ERROR: Sintaxis Nix inválida"
       rm "$CONFIG_FILE.new"
-      exit 0  # No fallar el apagado
+      exit 0
+    fi
+    log "✓ Sintaxis Nix válida"
+
+    # Comparar con configuración actual
+    if [ -f "$CONFIG_FILE" ] && ${pkgs.diffutils}/bin/cmp -s "$CONFIG_FILE" "$CONFIG_FILE.new"; then
+      log "⚠ La configuración descargada es idéntica a la actual"
+      log "No es necesario hacer rebuild"
+      rm "$CONFIG_FILE.new"
+      exit 0
     fi
 
     # Aplicar nueva configuración
     mv "$CONFIG_FILE.new" "$CONFIG_FILE"
-    log "Nueva configuración movida a $CONFIG_FILE"
+    log "✓ Nueva configuración en $CONFIG_FILE"
 
     log "Ejecutando nixos-rebuild switch..."
     if ${config.system.build.nixos-rebuild}/bin/nixos-rebuild switch 2>&1 | tee -a "$LOG_FILE"; then
-      log "=== Rebuild exitoso, sistema listo para apagarse ==="
+      log "✓✓✓ Rebuild exitoso, sistema actualizado ==="
       exit 0
     else
-      log "ERROR: Fallo en nixos-rebuild switch"
-      log "Restaurando última configuración de backup..."
+      log "✗✗✗ ERROR en nixos-rebuild switch"
+      log "Restaurando configuración de backup..."
       LAST_BACKUP=$(ls -t "$BACKUP_DIR"/configuration.nix.* 2>/dev/null | head -n1)
       if [ -n "$LAST_BACKUP" ]; then
         cp "$LAST_BACKUP" "$CONFIG_FILE"
-        log "Configuración restaurada desde backup"
+        log "Restaurando desde: $LAST_BACKUP"
         ${config.system.build.nixos-rebuild}/bin/nixos-rebuild switch 2>&1 | tee -a "$LOG_FILE" || true
       fi
-      exit 0  # No fallar el apagado
+      exit 0
     fi
   '';
 in
@@ -110,6 +139,9 @@ in
 
   # Enable networking
   networking.networkmanager.enable = true;
+
+  # Asegurar que NetworkManager espere por la red
+  systemd.services.NetworkManager-wait-online.enable = true;
 
   # Set your time zone.
   time.timeZone = "Europe/Madrid";
@@ -171,7 +203,7 @@ in
   users.users.aedm = {
     isNormalUser = true;
     description = "Asociación de Estudiantes de Diseño de Madrid";
-    extraGroups = [ "networkmanager" ];
+    extraGroups = [ "networkmanager" "wheel" ];  # Añadido wheel
     packages = with pkgs; [
     #  thunderbird
     ];
@@ -187,7 +219,8 @@ in
   # $ nix search wget
   environment.systemPackages = with pkgs; [
     curl
-    pkgs.chromium
+    chromium
+    vim  # Para editar logs si es necesario
   ];
 
   # Some programs need SUID wrappers, can be configured further or are
@@ -217,21 +250,30 @@ in
   systemd.services.nixos-update-on-shutdown = {
     description = "Download and apply NixOS configuration before shutdown";
 
-    # Se ejecuta antes del apagado y reinicio
-    wantedBy = [ "shutdown.target" ];
-    before = [ "shutdown.target" "umount.target" ];
-    conflicts = [ "shutdown.target" ];
+    # CRUCIAL: Ejecutar cuando se INICIA el target de shutdown
+    wantedBy = [ "halt.target" "poweroff.target" "reboot.target" ];
 
-    # Asegurar que la red esté disponible
-    after = [ "network-online.target" ];
+    # Debe ejecutarse ANTES de estos targets
+    before = [ "shutdown.target" "final.target" ];
+
+    # Requiere red
+    after = [ "network-online.target" "NetworkManager.service" ];
     wants = [ "network-online.target" ];
+    requires = [ "network-online.target" ];
 
     serviceConfig = {
       Type = "oneshot";
-      RemainAfterExit = true;
+      RemainAfterExit = "yes";
       ExecStart = updateScript;
-      TimeoutStartSec = "infinity";  # Sin timeout, espera lo necesario
-      User = "root";
+      TimeoutStartSec = "infinity";
+      StandardOutput = "journal+console";
+      StandardError = "journal+console";
+    };
+
+    # Forzar que se ejecute
+    unitConfig = {
+      DefaultDependencies = "no";
+      ConditionPathExists = "/etc/nixos/configuration.nix";
     };
   };
 
