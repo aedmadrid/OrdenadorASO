@@ -171,7 +171,7 @@ in
   users.users.aedm = {
     isNormalUser = true;
     description = "Asociación de Estudiantes de Diseño de Madrid";
-    extraGroups = [ "networkmanager" "wheel" ];
+    extraGroups = [ "networkmanager" ];
     packages = with pkgs; [
     #  thunderbird
     ];
@@ -186,9 +186,8 @@ in
   # List packages installed in system profile. To search, run:
   # $ nix search wget
   environment.systemPackages = with pkgs; [
-    curl  # Necesario para descargar la configuración
-  #  vim # Do not forget to add an editor to edit configuration.nix! The Nano editor is also installed by default.
-  #  wget
+    curl
+    pkgs.chromium
   ];
 
   # Some programs need SUID wrappers, can be configured further or are
