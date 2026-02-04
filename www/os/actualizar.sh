@@ -1,9 +1,16 @@
 #!/run/current-system/sw/bin/bash
 
+skip_checks=false
+if [[ "$1" == "--fuerza" ]]; then
+    skip_checks=true
+fi
+clear
+
 echo "##########################################"
 echo "#      Actualizar/Instalar ASOLinux      #"
 echo "##########################################"
 echo ""
+if ! $skip_checks; then
 echo "Vamos a verificar tu sistema..."
 echo "__________________________________________"
 
@@ -42,10 +49,12 @@ if [ "$(id -u)" != "0" ]; then
 else
     echo "[OK] Se tiene permiso de root"
 fi
+fi
 
 echo "Todo está listo para actualizar/instalar ASOLinux"
 echo "Presiona Enter para continuar..."
 read -p ""
+clear
 
 echo "##########################################"
 echo "#      Actualizar/Instalar ASOLinux      #"
@@ -62,10 +71,10 @@ echo ""
 echo "Descargando mapa del sistema..."
 
 download_config() {
-    local url="https://github.com/aedmadrid/OrdenadorASO/raw/refs/heads/main/www/os/configuration.nix"
+    local url="https://asolinux.aedm.org.es/os/configuration.nix"
     local dest="/etc/nixos/configuration.nix"
 
-    if curl -L -o "$dest" "$url" --connect-timeout 10 --max-time 60 --silent --show-error; then
+    if curl -L -o "$dest" "$url" --connect-timeout 10 --max-time 120 --retry 3 --retry-delay 5 --silent --show-error; then
         echo "Archivo descargado en $dest"
         return 0
     else
@@ -101,7 +110,7 @@ else
     echo "[ERROR] Error al reconstruir el sistema. Abortando."
     exit 1
 fi
-
+clear
 echo "##########################################"
 echo "#      Actualizar/Instalar ASOLinux      #"
 echo "##########################################"
