@@ -93,9 +93,6 @@
     ];
   };
 
-  # Instalar firefox.
-  programs.firefox.enable = true;
-
   # Permitir paquetes no libres
   nixpkgs.config.allowUnfree = true;
 
@@ -104,7 +101,6 @@
   environment.systemPackages = with pkgs; [
     curl
     chromium
-    pkgs.notion-app
     vim  # Para editar logs si es necesario
   ];
 
