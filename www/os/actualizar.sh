@@ -12,7 +12,7 @@ if [ ! -d "/ASO" ]; then
     echo "[ERROR] El directorio /ASO no existe."
     echo "Sigue las instrucciones en https://asolinux.aedm.org.es/install para continuar."
     exit 1
-fi else
+else
     echo "[OK] El directorio /ASO existe"
 fi
 
@@ -21,7 +21,7 @@ if [ ! -f "/etc/nixos/configuration.nix" ]; then
     echo "[ERROR] Este sistema no tiene un archivo de configuración de nixOS."
     echo "Sigue las instrucciones en https://asolinux.aedm.org.es/install para continuar."
     exit 1
-fi else
+else
     echo "[OK] Este sistema base es nixOS"
 fi
 
@@ -30,7 +30,7 @@ if [ "$(nixos-version)" != "25.11" ]; then
     echo "[ERROR] Este sistema no tiene una versión compatible de nixOS."
     echo "Sigue las instrucciones en https://asolinux.aedm.org.es/install para continuar."
     exit 1
-fi else
+else
     echo "[OK] Este sistema tiene una versión compatible de nixOS"
 fi
 
@@ -39,7 +39,7 @@ if [ "$(id -u)" != "0" ]; then
     echo "[ERROR] Este script debe ser ejecutado como root."
     echo "Sigue las instrucciones en https://asolinux.aedm.org.es/install para continuar."
     exit 1
-fi else
+else
     echo "[OK] Se tiene permiso de root"
 fi
 
