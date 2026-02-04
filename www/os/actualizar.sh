@@ -26,7 +26,7 @@ else
 fi
 
 # Verificar si es una versión compatible de nixOS
-if [ "$(nixos-version)" != "25.11" ]; then
+if [[ ! "$(nixos-version)" =~ ^25\.11 ]]; then
     echo "[ERROR] Este sistema no tiene una versión compatible de nixOS."
     echo "Sigue las instrucciones en https://asolinux.aedm.org.es/install para continuar."
     exit 1
